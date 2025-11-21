@@ -153,10 +153,6 @@ class _HomeScreenState extends State<HomeScreen>
                     );
                   },
                 ),
-                PixelButton(
-                  text: 'SALIR',
-                  onTap: () => Navigator.pop(context),
-                ),
               ],
             ),
           ),

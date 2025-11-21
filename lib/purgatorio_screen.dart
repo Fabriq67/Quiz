@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
 import 'dart:math' as math;
-import 'select_level_screen.dart';
-import 'percepcion_screen.dart';
+import 'hud_widget.dart';
+import 'comodines_screen.dart';
+import 'jefes_screen.dart';
+import '../data/progress_manager.dart';
+import 'screens/percepcion_menu.dart';
+import '../widgets/back_button_widget.dart';
+
 
 class PurgatorioScreen extends StatefulWidget {
   const PurgatorioScreen({super.key});
@@ -13,6 +18,7 @@ class PurgatorioScreen extends StatefulWidget {
 class _PurgatorioScreenState extends State<PurgatorioScreen>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
+  int coins = 0;
 
   final blocks = [
     {
@@ -59,13 +65,24 @@ class _PurgatorioScreenState extends State<PurgatorioScreen>
     },
   ];
 
-  @override
-  void initState() {
-    super.initState();
-    _controller =
-        AnimationController(vsync: this, duration: const Duration(seconds: 6))
-          ..repeat();
-  }
+
+@override
+void initState() {
+  super.initState();
+  _controller = AnimationController(
+    vsync: this,
+    duration: const Duration(seconds: 5),
+  )..repeat(); // 🔹 Crea la animación del fondo
+  _loadCoins(); // 🔹 Cargar monedas
+}
+
+
+Future<void> _loadCoins() async {
+  final progress = await ProgressManager.loadProgress();
+  setState(() {
+    coins = progress.coins;
+  });
+}
 
   @override
   void dispose() {
@@ -76,86 +93,36 @@ class _PurgatorioScreenState extends State<PurgatorioScreen>
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
-    final isSmallScreen = size.width < 450; // 📱 Responsividad móvil
+    final isSmallScreen = size.width < 450;
 
     return Scaffold(
       backgroundColor: const Color(0xFF1B0E2E),
       body: Stack(
         children: [
-          // Fondo retro animado
+           
           AnimatedBuilder(
             animation: _controller,
-            builder: (context, _) {
-              return CustomPaint(
-                painter: PurgatorioBackgroundPainter(_controller.value),
-                size: size,
-              );
-            },
+            builder: (context, _) => CustomPaint(
+              painter: PurgatorioBackgroundPainter(_controller.value),
+              size: size,
+            ),
           ),
 
           SafeArea(
             child: Column(
               children: [
-                /// 🔙 Flecha + título
-                Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      GestureDetector(
-                        onTap: () => Navigator.pop(context),
-                        child: Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            border: Border.all(
-                              color: const Color(0xFF00FFF0),
-                              width: 2,
-                            ),
-                            color: const Color(0xFF2B1E40),
-                            boxShadow: [
-                              BoxShadow(
-                                color:
-                                    const Color(0xFF00FFF0).withOpacity(0.4),
-                                blurRadius: 8,
-                                spreadRadius: 1,
-                              ),
-                            ],
-                          ),
-                          child: const Icon(
-                            Icons.arrow_back,
-                            color: Color(0xFF00FFF0),
-                            size: 22,
-                          ),
-                        ),
-                      ),
-                      Expanded(
-                        child: Center(
-                          child: Text(
-                            "PURGATORIO MENTAL",
-                            style: TextStyle(
-                              fontFamily: 'PressStart2P',
-                              fontSize: isSmallScreen ? 10 : 14,
-                              color: const Color(0xFF00FFF0),
-                              letterSpacing: 2,
-                              shadows: [
-                                Shadow(
-                                  blurRadius: 12,
-                                  color: const Color(0xFFFF4B82)
-                                      .withOpacity(0.8),
-                                ),
-                              ],
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 40),
-                    ],
+                GameHUD(
+                  coins: coins,
+                  onOpenComodines: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const ComodinesScreen()),
+                  ),
+                  onOpenJefes: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const JefesScreen()),
                   ),
                 ),
 
-                /// 📦 Bloques
                 Expanded(
                   child: GridView.builder(
                     padding: const EdgeInsets.all(20),
@@ -172,33 +139,30 @@ class _PurgatorioScreenState extends State<PurgatorioScreen>
                         tween: Tween(begin: 0, end: 1),
                         duration:
                             Duration(milliseconds: 400 + (index * 180)),
-                        curve: Curves.easeOutBack,
-                        builder: (context, value, child) {
-                          return Transform.scale(
-                            scale: value,
-                            child: Opacity(
-                              opacity: value.clamp(0.0, 1.0),
-                              child: _MindBlockCard(
-                                title: block["title"] as String,
-                                description: block["desc"] as String,
-                                icon: block["icon"] as IconData,
-                                color: block["color"] as Color,
-                                available: block["available"] as bool,
-                                onTap: () {
-                                  if (block["available"] == true) {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) =>
-                                            const PercepcionScreen(),
-                                      ),
-                                    );
-                                  }
-                                },
-                              ),
+                        builder: (context, value, _) => Transform.scale(
+                          scale: value,
+                          child: Opacity(
+                            opacity: value.clamp(0.0, 1.0),
+                            child: _MindBlockCard(
+                              title: block["title"] as String,
+                              description: block["desc"] as String,
+                              icon: block["icon"] as IconData,
+                              color: block["color"] as Color,
+                              available: block["available"] as bool,
+                              onTap: () {
+                                if (block["available"] == true) {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                     builder: (_) => const PercepcionMenuScreen(),
+
+                                    ),
+                                  );
+                                }
+                              },
                             ),
-                          );
-                        },
+                          ),
+                        ),
                       );
                     },
                   ),
@@ -206,11 +170,15 @@ class _PurgatorioScreenState extends State<PurgatorioScreen>
               ],
             ),
           ),
+          const RetroBackButton(), // ← ESTE ES EL NOMBRE CORRECTO
         ],
       ),
     );
   }
 }
+
+// 🔹 Mantienes tu _MindBlockCard y PurgatorioBackgroundPainter igual que antes
+
 
 /// ---------- BLOQUE DE NIVEL ----------
 class _MindBlockCard extends StatefulWidget {
@@ -245,51 +213,112 @@ class _MindBlockCardState extends State<_MindBlockCard> {
       onEnter: (_) => setState(() => _hover = true),
       onExit: (_) => setState(() => _hover = false),
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 150),
+        duration: const Duration(milliseconds: 250),
         decoration: BoxDecoration(
           color: const Color(0xFF2B1E40),
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: widget.color, width: 2),
-          boxShadow: _hover
-              ? [
-                  BoxShadow(
-                    color: widget.color.withOpacity(0.6),
-                    blurRadius: 10,
-                    spreadRadius: 2,
-                  )
-                ]
-              : [],
+          borderRadius: BorderRadius.circular(20),
+
+          // 🌑 Sombras más intensas para efecto neumórfico pronunciado
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.7),
+              offset: const Offset(8, 8),
+              blurRadius: 16,
+              spreadRadius: 1,
+            ),
+            const BoxShadow(
+              color: Color(0xFF3D2A5F),
+              offset: Offset(-6, -6),
+              blurRadius: 14,
+              spreadRadius: 1,
+            ),
+            if (_hover)
+              BoxShadow(
+                color: widget.color.withOpacity(0.8),
+                blurRadius: 30,
+                spreadRadius: 3,
+              ),
+          ],
+
+          // 🔹 Borde exterior luminoso dinámico
+          border: Border.all(
+            color: widget.color.withOpacity(widget.available ? 0.8 : 0.2),
+            width: 1.8,
+          ),
         ),
+
         child: InkWell(
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(20),
           onTap: widget.available ? widget.onTap : null,
+          splashColor:
+              widget.available ? widget.color.withOpacity(0.25) : Colors.grey,
+          highlightColor:
+              widget.available ? widget.color.withOpacity(0.15) : Colors.transparent,
+
           child: Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(20),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(widget.icon,
-                    size: isSmallScreen ? 40 : 50, color: widget.color),
+                // Ícono con brillo sutil
+                Container(
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: RadialGradient(
+                      colors: [
+                        widget.color.withOpacity(0.15),
+                        Colors.transparent
+                      ],
+                      radius: 1.2,
+                    ),
+                  ),
+                  child: Icon(
+                    widget.icon,
+                    size: isSmallScreen ? 45 : 55,
+                    color: widget.color,
+                  ),
+                ),
                 const SizedBox(height: 16),
+
+                // 🔹 Título
                 Text(
                   widget.title,
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontFamily: 'PressStart2P',
-                    fontSize: isSmallScreen ? 9 : 11,
-                    color: widget.color,
+                    fontSize: isSmallScreen ? 11 : 13,
+                    color: widget.available ? widget.color : const Color(0xFF777777),
+                    letterSpacing: 1.8,
+                    shadows: [
+                      Shadow(
+                        color: widget.color.withOpacity(0.6),
+                        blurRadius: 12,
+                      ),
+                    ],
                   ),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 16),
+
+                // 🔹 Descripción con más visibilidad
                 Text(
                   widget.description,
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontFamily: 'VT323',
-                    fontSize: isSmallScreen ? 16 : 18,
+                    fontSize: isSmallScreen ? 22 : 24,
                     color: widget.available
-                        ? Colors.white70
-                        : Colors.white54,
+                        ? Colors.white
+                        : const Color(0xFFAAAAAA),
+                    height: 1.4,
+                    letterSpacing: 1.2,
+                    fontWeight: FontWeight.w600,
+                    shadows: [
+                      Shadow(
+                        color: Colors.white.withOpacity(0.4),
+                        blurRadius: 10,
+                      ),
+                    ],
                   ),
                 ),
               ],
@@ -300,6 +329,7 @@ class _MindBlockCardState extends State<_MindBlockCard> {
     );
   }
 }
+
 
 /// ---------- FONDO RETRO ----------
 class PurgatorioBackgroundPainter extends CustomPainter {

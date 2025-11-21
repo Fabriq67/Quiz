@@ -1,0 +1,245 @@
+{
+  "nivel": "PERCEPCIÓN",
+  "preguntas": [
+    {
+      "id": "PERC-01",
+      "pregunta": "¿Qué figura suele percibirse más estable visualmente?",
+      "opciones": ["Cuadrado", "Triángulo", "Círculo", "Pentágono"],
+      "respuesta_correcta": "Cuadrado",
+      "dificultad": "facil",
+      "explicacion": "El cuadrado tiene lados iguales y transmite equilibrio."
+    },
+    {
+      "id": "PERC-02",
+      "pregunta": "Dos líneas iguales parecen de diferente longitud si tienen puntas opuestas. ¿Qué ilusión es?",
+      "opciones": ["Müller-Lyer", "Hermann", "Ponzo", "Ebbinghaus"],
+      "respuesta_correcta": "Müller-Lyer",
+      "dificultad": "media",
+      "explicacion": "Las puntas modifican la percepción de distancia."
+    },
+    {
+      "id": "PERC-03",
+      "pregunta": "Un color cálido suele percibirse como más cercano que uno frío. ¿Cuál es el más cercano?",
+      "opciones": ["Rojo", "Azul", "Verde", "Morado"],
+      "respuesta_correcta": "Rojo",
+      "dificultad": "facil",
+      "explicacion": "Los colores cálidos avanzan visualmente."
+    },
+    {
+      "id": "PERC-04",
+      "pregunta": "Una sombra larga sugiere que la luz está...",
+      "opciones": ["Muy baja", "Muy alta", "Directamente arriba", "No afecta"],
+      "respuesta_correcta": "Muy baja",
+      "dificultad": "facil",
+      "explicacion": "Sombras largas indican luz cercana al horizonte."
+    },
+    {
+      "id": "PERC-05",
+      "pregunta": "¿Qué figura suele percibirse como más veloz?",
+      "opciones": ["Triángulo", "Círculo", "Hexágono", "Cuadrado"],
+      "respuesta_correcta": "Triángulo",
+      "dificultad": "media",
+      "explicacion": "Su punta genera dirección visual."
+    },
+    {
+      "id": "PERC-06",
+      "pregunta": "Cuando ves puntos blancos aparecer entre una cuadrícula negra, ¿qué ilusión es?",
+      "opciones": ["Hermann", "Ponzo", "Fraser", "Müller-Lyer"],
+      "respuesta_correcta": "Hermann",
+      "dificultad": "dificil",
+      "explicacion": "Los puntos fantasma aparecen en intersecciones."
+    },
+    {
+      "id": "PERC-07",
+      "pregunta": "Un objeto lejano suele percibirse...",
+      "opciones": ["Más pequeño", "Más grande", "Más brillante", "Más detallado"],
+      "respuesta_correcta": "Más pequeño",
+      "dificultad": "facil",
+      "explicacion": "La perspectiva reduce el tamaño percibido."
+    },
+    {
+      "id": "PERC-08",
+      "pregunta": "¿Cuál color se percibe más frío visualmente?",
+      "opciones": ["Azul", "Rojo", "Amarillo", "Naranja"],
+      "respuesta_correcta": "Azul",
+      "dificultad": "facil",
+      "explicacion": "El azul transmite frialdad y distancia."
+    },
+    {
+      "id": "PERC-09",
+      "pregunta": "Al ver una figura reversible como el jarrón de Rubin, ¿qué ocurre?",
+      "opciones": ["Es posible ver dos interpretaciones", "Se ve borrosa", "Pierde forma", "Se vuelve gris"],
+      "respuesta_correcta": "Es posible ver dos interpretaciones",
+      "dificultad": "media",
+      "explicacion": "El cerebro alterna entre dos formas posibles."
+    },
+    {
+      "id": "PERC-10",
+      "pregunta": "Si ves puntos parpadear alternadamente en dos posiciones, ocurre...",
+      "opciones": ["Movimiento aparente", "Efecto sombra", "Distorsión Ponzo", "Inversión de profundidad"],
+      "respuesta_correcta": "Movimiento aparente",
+      "dificultad": "media",
+      "explicacion": "El cerebro crea movimiento donde no lo hay."
+    },
+    {
+      "id": "PERC-11",
+      "pregunta": "Una figura más saturada que otra del mismo tono se percibe como...",
+      "opciones": ["Más llamativa", "Más distante", "Más pequeña", "Más pesada"],
+      "respuesta_correcta": "Más llamativa",
+      "dificultad": "facil",
+      "explicacion": "La saturación aumenta el impacto visual."
+    },
+    {
+      "id": "PERC-12",
+      "pregunta": "Si una figura está borrosa en comparación con otra, suele percibirse...",
+      "opciones": ["Más lejana", "Más cercana", "Más pesada", "Más brillante"],
+      "respuesta_correcta": "Más lejana",
+      "dificultad": "facil",
+      "explicacion": "Los objetos lejanos pierden nitidez."
+    },
+    {
+      "id": "PERC-13",
+      "pregunta": "En la ilusión Ponzo, las líneas iguales parecen distintas por...",
+      "opciones": ["Perspectiva", "Sombra", "Grosor", "Color"],
+      "respuesta_correcta": "Perspectiva",
+      "dificultad": "media",
+      "explicacion": "El fondo crea sensación de profundidad falsa."
+    },
+    {
+      "id": "PERC-14",
+      "pregunta": "En un patrón de líneas inclinadas, una línea vertical puede parecer inclinada por...",
+      "opciones": ["Efecto contextual", "Color", "Sombra", "Tamaño"],
+      "respuesta_correcta": "Efecto contextual",
+      "dificultad": "media",
+      "explicacion": "Las líneas circundantes alteran la percepción."
+    },
+    {
+      "id": "PERC-15",
+      "pregunta": "Un círculo suele percibirse más simple porque...",
+      "opciones": ["Tiene simetría perfecta", "Es más brillante", "Tiene bordes fuertes", "Es más pesado"],
+      "respuesta_correcta": "Tiene simetría perfecta",
+      "dificultad": "facil",
+      "explicacion": "La simetría reduce complejidad perceptual."
+    },
+    {
+      "id": "PERC-16",
+      "pregunta": "Una figura con muchos bordes suele parecer...",
+      "opciones": ["Más grande", "Más ligera", "Más lenta", "Más fría"],
+      "respuesta_correcta": "Más grande",
+      "dificultad": "media",
+      "explicacion": "Más detalle → mayor tamaño percibido."
+    },
+    {
+      "id": "PERC-17",
+      "pregunta": "Si un círculo está dentro de círculos grandes, suele percibirse...",
+      "opciones": ["Más pequeño", "Más grande", "Igual", "Más cercano"],
+      "respuesta_correcta": "Más pequeño",
+      "dificultad": "media",
+      "explicacion": "El contexto altera la percepción del tamaño."
+    },
+    {
+      "id": "PERC-18",
+      "pregunta": "¿Qué tipo de contraste hace que un color parezca más brillante?",
+      "opciones": ["Complementario", "Monocromático", "Pastel", "Oscuro"],
+      "respuesta_correcta": "Complementario",
+      "dificultad": "media",
+      "explicacion": "Los colores opuestos intensifican brillo."
+    },
+    {
+      "id": "PERC-19",
+      "pregunta": "Las líneas gruesas se perciben como...",
+      "opciones": ["Más fuertes", "Más débiles", "Más frías", "Más pequeñas"],
+      "respuesta_correcta": "Más fuertes",
+      "dificultad": "facil",
+      "explicacion": "El grosor da peso visual."
+    },
+    {
+      "id": "PERC-20",
+      "pregunta": "Si ves un patrón blanco y negro repetitivo, puedes percibir...",
+      "opciones": ["Vibración visual", "Movimiento real", "Desenfoque", "Color inexistente"],
+      "respuesta_correcta": "Vibración visual",
+      "dificultad": "facil",
+      "explicacion": "El contraste extremo genera vibración perceptiva."
+    },
+    {
+      "id": "PERC-21",
+      "pregunta": "Una figura iluminada desde arriba tendrá su sombra hacia...",
+      "opciones": ["Abajo", "Arriba", "Izquierda", "Derecha"],
+      "respuesta_correcta": "Abajo",
+      "dificultad": "facil",
+      "explicacion": "La sombra siempre se opone a la fuente de luz."
+    },
+    {
+      "id": "PERC-22",
+      "pregunta": "Si una figura está muy saturada en un fondo saturado, se vuelve...",
+      "opciones": ["Menos visible", "Más brillante", "Más clara", "Más grande"],
+      "respuesta_correcta": "Menos visible",
+      "dificultad": "media",
+      "explicacion": "Los colores saturados compiten entre sí."
+    },
+    {
+      "id": "PERC-23",
+      "pregunta": "En un patrón espiral Fraser, la espiral es realmente...",
+      "opciones": ["Unas líneas circulares", "Una espiral verdadera", "Una figura recta", "Un zigzag"],
+      "respuesta_correcta": "Unas líneas circulares",
+      "dificultad": "dificil",
+      "explicacion": "Parece espiral, pero es un patrón circular."
+    },
+    {
+      "id": "PERC-24",
+      "pregunta": "Un óvalo vertical suele percibirse como...",
+      "opciones": ["Más puntiagudo", "Más redondo", "Más pesado", "Más lento"],
+      "respuesta_correcta": "Más puntiagudo",
+      "dificultad": "media",
+      "explicacion": "La elongación crea sensación de punta."
+    },
+    {
+      "id": "PERC-25",
+      "pregunta": "Una figura totalmente simétrica suele percibirse como...",
+      "opciones": ["Más equilibrada", "Más lejana", "Más compleja", "Más pesada"],
+      "respuesta_correcta": "Más equilibrada",
+      "dificultad": "facil",
+      "explicacion": "La simetría transmite armonía visual."
+    },
+    {
+      "id": "PERC-26",
+      "pregunta": "Un objeto oscuro en un fondo claro tiene...",
+      "opciones": ["Mayor contraste", "Menor contraste", "Misma visibilidad", "Sin efecto"],
+      "respuesta_correcta": "Mayor contraste",
+      "dificultad": "facil",
+      "explicacion": "El contraste se incrementa entre tonos opuestos."
+    },
+    {
+      "id": "PERC-27",
+      "pregunta": "Si una línea está rodeada de líneas inclinadas, puede parecer...",
+      "opciones": ["Inclinada", "Más larga", "Más gruesa", "Más cercana"],
+      "respuesta_correcta": "Inclinada",
+      "dificultad": "media",
+      "explicacion": "El contexto altera la dirección percibida."
+    },
+    {
+      "id": "PERC-28",
+      "pregunta": "Una figura con iluminación lateral tendrá su borde opuesto...",
+      "opciones": ["En sombra", "Más grande", "Más puntiagudo", "Más vibrante"],
+      "respuesta_correcta": "En sombra",
+      "dificultad": "facil",
+      "explicacion": "La luz crea sombra en el lado contrario."
+    },
+    {
+      "id": "PERC-29",
+      "pregunta": "Una figura con bordes muy marcados suele percibirse como...",
+      "opciones": ["Más cercana", "Más suave", "Más pequeña", "Más ligera"],
+      "respuesta_correcta": "Más cercana",
+      "dificultad": "media",
+      "explicacion": "Los bordes fuertes generan sensación de proximidad."
+    },
+    {
+      "id": "PERC-30",
+      "pregunta": "¿Qué figura se reconoce más rápido?",
+      "opciones": ["Círculo", "Pentágono", "Trapecio", "Rombo"],
+      "respuesta_correcta": "Círculo",
+      "dificultad": "facil",
+      "explicacion": "El círculo es la figura más simple."
+    }
+  ]
+}
