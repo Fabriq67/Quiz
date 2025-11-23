@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:math' as math;
+
 import 'hud_widget.dart';
 import 'comodines_screen.dart';
 import 'jefes_screen.dart';
@@ -17,7 +18,10 @@ class PurgatorioScreen extends StatefulWidget {
 class _PurgatorioScreenState extends State<PurgatorioScreen>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
+
   int coins = 0;
+
+  bool _tutorialShown = false; // <<< NUEVO
 
   final blocks = [
     {
@@ -67,12 +71,14 @@ class _PurgatorioScreenState extends State<PurgatorioScreen>
   @override
   void initState() {
     super.initState();
+
     _controller = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 5),
     )..repeat();
 
     _loadCoins();
+    _loadTutorialState(); // <<< NUEVO
   }
 
   Future<void> _loadCoins() async {
@@ -82,12 +88,137 @@ class _PurgatorioScreenState extends State<PurgatorioScreen>
     });
   }
 
+  /// --------------------------------------------------
+  /// 🔥 Cargar si el tutorial ya se mostró antes
+  /// --------------------------------------------------
+  Future<void> _loadTutorialState() async {
+    _tutorialShown =
+        await ProgressManager.getBool("tutorial_purgatorio_shown") ?? false;
+
+    if (!_tutorialShown) {
+      Future.delayed(
+        const Duration(milliseconds: 500),
+        () => _showPurgatorioTutorial(),
+      );
+    }
+  }
+
+  /// --------------------------------------------------
+  /// Guardar que el tutorial ya fue visto
+  /// --------------------------------------------------
+  Future<void> _setTutorialSeen() async {
+    await ProgressManager.saveBool("tutorial_purgatorio_shown", true);
+  }
+
+  /// --------------------------------------------------
+  /// VENTANA EMERGENTE (TUTORIAL)
+  /// --------------------------------------------------
+  void _showPurgatorioTutorial() {
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (context) {
+        return Center(
+          child: Container(
+            width: 360,
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: const Color(0xFF2B1E40),
+              borderRadius: BorderRadius.circular(22),
+              border: Border.all(
+                color: const Color(0xFF00FFF0),
+                width: 3,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF00FFF0).withOpacity(0.4),
+                  blurRadius: 25,
+                  spreadRadius: 3,
+                ),
+              ],
+            ),
+
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  "BIENVENIDO",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontFamily: "PressStart2P",
+                    fontSize: 16,
+                    color: const Color(0xFFFF4B82),
+                    shadows: [
+                      Shadow(
+                        blurRadius: 10,
+                        color: const Color(0xFF00FFF0),
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 20),
+
+                const Text(
+                  "Este es el PURGATORIO MENTAL.\n\n"
+                  "Escoge PERCEPCIÓN para iniciar tu aventura.\n\n"
+                  "Cada nivel desbloquea el siguiente.\n\n"
+                  "¡Buena suerte!",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontFamily: "VT323",
+                    fontSize: 26,
+                    color: Colors.white,
+                    height: 1.3,
+                  ),
+                ),
+
+                const SizedBox(height: 30),
+
+                GestureDetector(
+                  onTap: () {
+                    _setTutorialSeen(); // <<< MARCAR COMO VISTO
+                    Navigator.pop(context);
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 40, vertical: 14),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFF4B82),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(
+                        color: const Color(0xFF00FFF0),
+                        width: 2,
+                      ),
+                    ),
+                    child: const Text(
+                      "ENTRAR",
+                      style: TextStyle(
+                        fontFamily: "PressStart2P",
+                        fontSize: 14,
+                        color: Colors.white,
+                        letterSpacing: 2,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   @override
   void dispose() {
     _controller.dispose();
     super.dispose();
   }
 
+  /// --------------------------------------------------
+  /// UI PRINCIPAL
+  /// --------------------------------------------------
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
@@ -134,7 +265,8 @@ class _PurgatorioScreenState extends State<PurgatorioScreen>
                       final block = blocks[index];
                       return TweenAnimationBuilder<double>(
                         tween: Tween(begin: 0, end: 1),
-                        duration: Duration(milliseconds: 400 + (index * 180)),
+                        duration:
+                            Duration(milliseconds: 400 + (index * 180)),
                         builder: (context, value, _) => Transform.scale(
                           scale: value,
                           child: Opacity(
@@ -150,7 +282,8 @@ class _PurgatorioScreenState extends State<PurgatorioScreen>
                                   Navigator.push(
                                     context,
                                     MaterialPageRoute(
-                                      builder: (_) => const PercepcionMenuScreen(),
+                                      builder: (_) =>
+                                          const PercepcionMenuScreen(),
                                     ),
                                   );
                                 }
@@ -173,9 +306,7 @@ class _PurgatorioScreenState extends State<PurgatorioScreen>
   }
 }
 
-/// -----------------------------
-/// CARTA DE CADA NIVEL
-/// -----------------------------
+/// -------------------------------------------
 class _MindBlockCard extends StatefulWidget {
   final String title;
   final String description;
@@ -241,10 +372,6 @@ class _MindBlockCardState extends State<_MindBlockCard> {
         child: InkWell(
           borderRadius: BorderRadius.circular(20),
           onTap: widget.available ? widget.onTap : null,
-          splashColor:
-              widget.available ? widget.color.withOpacity(0.25) : Colors.grey,
-          highlightColor:
-              widget.available ? widget.color.withOpacity(0.15) : Colors.transparent,
 
           child: Padding(
             padding: const EdgeInsets.all(20),
@@ -269,6 +396,7 @@ class _MindBlockCardState extends State<_MindBlockCard> {
                     color: widget.color,
                   ),
                 ),
+
                 const SizedBox(height: 16),
 
                 Text(
@@ -277,16 +405,13 @@ class _MindBlockCardState extends State<_MindBlockCard> {
                   style: TextStyle(
                     fontFamily: 'PressStart2P',
                     fontSize: isSmallScreen ? 11 : 13,
-                    color: widget.available ? widget.color : const Color(0xFF777777),
+                    color: widget.available
+                        ? widget.color
+                        : const Color(0xFF777777),
                     letterSpacing: 1.8,
-                    shadows: [
-                      Shadow(
-                        color: widget.color.withOpacity(0.6),
-                        blurRadius: 12,
-                      ),
-                    ],
                   ),
                 ),
+
                 const SizedBox(height: 16),
 
                 Text(
@@ -295,20 +420,12 @@ class _MindBlockCardState extends State<_MindBlockCard> {
                   style: TextStyle(
                     fontFamily: 'VT323',
                     fontSize: isSmallScreen ? 22 : 24,
-                    color: widget.available ? Colors.white : const Color(0xFFAAAAAA),
-                    height: 1.4,
-                    letterSpacing: 1.2,
-                    fontWeight: FontWeight.w600,
-                    shadows: [
-                      Shadow(
-                        color: Colors.white.withOpacity(0.4),
-                        blurRadius: 10,
-                      ),
-                    ],
+                    color: widget.available
+                        ? Colors.white
+                        : const Color(0xFFAAAAAA),
                   ),
                 ),
 
-                /// 🔹 AQUI AGREGAMOS "PRÓXIMAMENTE DISPONIBLE"
                 if (!widget.available)
                   Padding(
                     padding: const EdgeInsets.only(top: 10),
@@ -319,14 +436,6 @@ class _MindBlockCardState extends State<_MindBlockCard> {
                         fontFamily: 'PressStart2P',
                         fontSize: isSmallScreen ? 8 : 10,
                         color: widget.color.withOpacity(0.7),
-                        height: 1.6,
-                        letterSpacing: 1.5,
-                        shadows: [
-                          Shadow(
-                            color: widget.color.withOpacity(0.5),
-                            blurRadius: 6,
-                          ),
-                        ],
                       ),
                     ),
                   ),
@@ -339,9 +448,7 @@ class _MindBlockCardState extends State<_MindBlockCard> {
   }
 }
 
-/// -----------------------------
-/// FONDO RETRO
-/// -----------------------------
+/// --------------------------------------------------
 class PurgatorioBackgroundPainter extends CustomPainter {
   final double progress;
   PurgatorioBackgroundPainter(this.progress);

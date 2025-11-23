@@ -79,4 +79,26 @@ class ProgressManager {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getBool("block_$id") ?? (id == 1 ? true : false);
   }
+
+  static Future<bool> wasTutorialShown(String key) async {
+  final prefs = await SharedPreferences.getInstance();
+  return prefs.getBool(key) ?? false;
+}
+
+static Future<void> setTutorialShown(String key) async {
+  final prefs = await SharedPreferences.getInstance();
+  await prefs.setBool(key, true);
+}
+
+  static Future<void> saveBool(String key, bool value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(key, value);
+  }
+
+  /// Obtiene un valor booleano guardado
+  static Future<bool?> getBool(String key) async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(key);
+  }
+
 }

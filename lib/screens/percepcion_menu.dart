@@ -43,14 +43,126 @@ class _PercepcionMenuScreenState extends State<PercepcionMenuScreen>
   @override
   void initState() {
     super.initState();
+
     _controller =
         AnimationController(vsync: this, duration: Duration(seconds: 6))
           ..repeat();
 
     _loadCoins();
     _loadUnlocks();
+
+    // 🔥 MOSTRAR TUTORIAL SOLO UNA VEZ
+    Future.delayed(const Duration(milliseconds: 500), () async {
+      bool seen = await ProgressManager.wasTutorialShown("tutorial_percepcion");
+
+      if (!seen) {
+        _showPercepcionTutorial();
+        await ProgressManager.setTutorialShown("tutorial_percepcion");
+      }
+    });
   }
 
+  /// ------------------------------
+  /// VENTANA TUTORIAL
+  /// ------------------------------
+  void _showPercepcionTutorial() {
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (context) {
+        return Center(
+          child: Container(
+            width: 360,
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: const Color(0xFF2B1E40),
+              borderRadius: BorderRadius.circular(22),
+              border: Border.all(
+                color: const Color(0xFF00FFF0),
+                width: 3,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF00FFF0).withOpacity(0.4),
+                  blurRadius: 25,
+                  spreadRadius: 3,
+                ),
+              ],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  "MUNDO: PERCEPCIÓN",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontFamily: "PressStart2P",
+                    fontSize: 13,
+                    color: const Color(0xFF00FFF0),
+                    shadows: [
+                      Shadow(
+                        blurRadius: 10,
+                        color: const Color(0xFFFF4B82),
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 20),
+
+                const Text(
+                  "Selecciona un BLOQUE para comenzar.\n\n"
+                  "Solo UNA respuesta es correcta. Tienes un cronómetro activo.\n\n"
+                  "A medida que avances, el tiempo será menor,\n"
+                  "y las preguntas más engañosas…\n\n"
+                  "Prepárate y enfrenta los desafíos.\n\n"
+                  "¡Suerte, guerrero mental!",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontFamily: "VT323",
+                    fontSize: 26,
+                    color: Colors.white,
+                    height: 1.35,
+                  ),
+                ),
+
+                const SizedBox(height: 30),
+
+                GestureDetector(
+                  onTap: () => Navigator.pop(context),
+                  child: Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 40, vertical: 14),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFF4B82),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(
+                        color: const Color(0xFF00FFF0),
+                        width: 2,
+                      ),
+                    ),
+                    child: const Text(
+                      "ENTRAR",
+                      style: TextStyle(
+                        fontFamily: "PressStart2P",
+                        fontSize: 14,
+                        color: Colors.white,
+                        letterSpacing: 2,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  /// ------------------------------
+  /// LOAD DATA
+  /// ------------------------------
   Future<void> _loadUnlocks() async {
     final u1 = await ProgressManager.isBlockUnlocked(1);
     final u2 = await ProgressManager.isBlockUnlocked(2);
@@ -72,12 +184,14 @@ class _PercepcionMenuScreenState extends State<PercepcionMenuScreen>
     super.dispose();
   }
 
+  /// ------------------------------
+  /// UI PRINCIPAL
+  /// ------------------------------
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
     final width = size.width;
 
-    // ASPECT RATIO DINÁMICO
     final double cardAspectRatio = (width < 420) ? 0.70 : 1.0;
 
     return Scaffold(
@@ -101,12 +215,10 @@ class _PercepcionMenuScreenState extends State<PercepcionMenuScreen>
                   padding: EdgeInsets.symmetric(horizontal: 16),
                   child: GameHUD(
                     coins: coins,
-                    onOpenComodines: () =>
-                        Navigator.push(context,
-                            MaterialPageRoute(builder: (_) => ComodinesScreen())),
-                    onOpenJefes: () =>
-                        Navigator.push(context,
-                            MaterialPageRoute(builder: (_) => JefesScreen())),
+                    onOpenComodines: () => Navigator.push(context,
+                        MaterialPageRoute(builder: (_) => ComodinesScreen())),
+                    onOpenJefes: () => Navigator.push(context,
+                        MaterialPageRoute(builder: (_) => JefesScreen())),
                   ),
                 ),
 
