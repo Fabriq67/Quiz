@@ -26,7 +26,8 @@ class _PercepcionQuizScreenState extends State<PercepcionQuizScreen> {
 
   int currentIndex = 0;
   int score = 0;
-  int timeRemaining = 12;
+ late int timeRemaining;
+
 
   Timer? timer;
 
@@ -36,6 +37,15 @@ class _PercepcionQuizScreenState extends State<PercepcionQuizScreen> {
   @override
   void initState() {
     super.initState();
+
+      if (widget.blockId == 1) {
+    timeRemaining = 30;
+  } else if (widget.blockId == 2) {
+    timeRemaining = 20;
+  } else {
+    timeRemaining = 12; // default por si usas otros bloques luego
+  }
+
     futurePreguntas =
         PercepcionService.obtenerPreguntasBloque(widget.blockId);
 
@@ -72,18 +82,26 @@ class _PercepcionQuizScreenState extends State<PercepcionQuizScreen> {
     });
   }
 
-  void pasarSiguiente() {
-    selectedAnswer = null;
-    answerChecked = false;
-    timeRemaining = 12;
+void pasarSiguiente() {
+  selectedAnswer = null;
+  answerChecked = false;
 
-    if (currentIndex == widget.totalQuestions - 1) {
-      terminarBloque();
-    } else {
-      setState(() => currentIndex++);
-      startTimer();
-    }
+  if (widget.blockId == 1) {
+    timeRemaining = 30;
+  } else if (widget.blockId == 2) {
+    timeRemaining = 20;
+  } else {
+    timeRemaining = 12;
   }
+
+  if (currentIndex == widget.totalQuestions - 1) {
+    terminarBloque();
+  } else {
+    setState(() => currentIndex++);
+    startTimer();
+  }
+}
+
 
   void terminarBloque() async {
     final minimo = widget.isBoss ? 7 : 3;
