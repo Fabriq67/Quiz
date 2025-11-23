@@ -19,7 +19,7 @@ class QuizMenteApp extends StatelessWidget {
         colorScheme: const ColorScheme.dark(
           primary: Color(0xFFFF4B82),
           secondary: Color(0xFF00FFF0),
-          background: Color(0xFF1B0E2E),
+          surface: Color(0xFF1B0E2E),
         ),
         textTheme: const TextTheme(
           bodyMedium: TextStyle(
@@ -49,10 +49,104 @@ class _HomeScreenState extends State<HomeScreen>
   @override
   void initState() {
     super.initState();
+
     _controller = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 6),
     )..repeat();
+
+    // Mostrar aviso 0.5 segundos después de cargar
+    Future.delayed(const Duration(milliseconds: 500), () {
+      _showUpdateNotice();
+    });
+  }
+
+  /// ---------- AVISO EMERGENTE ----------
+  void _showUpdateNotice() {
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (context) {
+        return Center(
+          child: Container(
+            width: 330,
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: const Color(0xFF2B1E40),
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: const Color(0xFF00FFF0), width: 3),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF00FFF0).withOpacity(0.4),
+                  blurRadius: 18,
+                ),
+              ],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  "AVISO",
+                  style: TextStyle(
+                    fontFamily: "PressStart2P",
+                    color: const Color(0xFFFF4B82),
+                    fontSize: 14,
+                    shadows: [
+                      Shadow(
+                        color: const Color(0xFF00FFF0).withOpacity(0.7),
+                        blurRadius: 8,
+                      )
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 20),
+
+                const Text(
+                  "Esta versión entrega la funcionalidad completa del quiz en PERCEPCIÓN, "
+                  "la lógica de bloques y la navegación del Purgatorio Mental.\n\n"
+                  "Las monedas, jefes, comodines y el resto de niveles serán añadidos "
+                  "en las siguientes actualizaciones antes de la entrega final.",
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontFamily: 'VT323',
+                    fontSize: 20,
+                    height: 1.3,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+
+                const SizedBox(height: 25),
+
+                GestureDetector(
+                  onTap: () => Navigator.pop(context),
+                  child: Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 30, vertical: 12),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFF4B82),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: const Color(0xFF00FFF0),
+                        width: 2,
+                      ),
+                    ),
+                    child: const Text(
+                      "CERRAR",
+                      style: TextStyle(
+                        fontFamily: "PressStart2P",
+                        color: Colors.white,
+                        fontSize: 12,
+                        letterSpacing: 2,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 
   @override
@@ -67,7 +161,7 @@ class _HomeScreenState extends State<HomeScreen>
     return Scaffold(
       body: Stack(
         children: [
-          // Fondo retro animado (rejilla 3D tipo consola)
+          /// ---------- FONDO RETRO ----------
           AnimatedBuilder(
             animation: _controller,
             builder: (context, child) {
@@ -78,12 +172,12 @@ class _HomeScreenState extends State<HomeScreen>
             },
           ),
 
-          // Contenido principal
+          /// ---------- CONTENIDO CENTRAL ----------
           Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // Título tipo pixel arcade
+                // Título estilo arcade
                 Text(
                   'QUIZMENTE',
                   style: TextStyle(
@@ -98,11 +192,9 @@ class _HomeScreenState extends State<HomeScreen>
                       ),
                     ],
                   ),
-                  textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 60),
 
-                // Botones pixelados arcade
                 PixelButton(
                   text: 'JUGAR',
                   onTap: () {
@@ -233,7 +325,8 @@ class RetroBackgroundPainter extends CustomPainter {
     // Líneas verticales animadas
     for (double x = 0; x < size.width; x += 25) {
       final offset = math.sin(progress * 2 * math.pi + x / 50) * 5;
-      canvas.drawLine(Offset(x, 0 + offset), Offset(x, size.height - offset), paint);
+      canvas.drawLine(
+          Offset(x, 0 + offset), Offset(x, size.height - offset), paint);
     }
   }
 

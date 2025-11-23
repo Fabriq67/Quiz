@@ -7,7 +7,6 @@ import '../data/progress_manager.dart';
 import 'screens/percepcion_menu.dart';
 import '../widgets/back_button_widget.dart';
 
-
 class PurgatorioScreen extends StatefulWidget {
   const PurgatorioScreen({super.key});
 
@@ -65,24 +64,23 @@ class _PurgatorioScreenState extends State<PurgatorioScreen>
     },
   ];
 
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 5),
+    )..repeat();
 
-@override
-void initState() {
-  super.initState();
-  _controller = AnimationController(
-    vsync: this,
-    duration: const Duration(seconds: 5),
-  )..repeat(); // 🔹 Crea la animación del fondo
-  _loadCoins(); // 🔹 Cargar monedas
-}
+    _loadCoins();
+  }
 
-
-Future<void> _loadCoins() async {
-  final progress = await ProgressManager.loadProgress();
-  setState(() {
-    coins = progress.coins;
-  });
-}
+  Future<void> _loadCoins() async {
+    final progress = await ProgressManager.loadProgress();
+    setState(() {
+      coins = progress.coins;
+    });
+  }
 
   @override
   void dispose() {
@@ -99,7 +97,6 @@ Future<void> _loadCoins() async {
       backgroundColor: const Color(0xFF1B0E2E),
       body: Stack(
         children: [
-           
           AnimatedBuilder(
             animation: _controller,
             builder: (context, _) => CustomPaint(
@@ -137,8 +134,7 @@ Future<void> _loadCoins() async {
                       final block = blocks[index];
                       return TweenAnimationBuilder<double>(
                         tween: Tween(begin: 0, end: 1),
-                        duration:
-                            Duration(milliseconds: 400 + (index * 180)),
+                        duration: Duration(milliseconds: 400 + (index * 180)),
                         builder: (context, value, _) => Transform.scale(
                           scale: value,
                           child: Opacity(
@@ -154,8 +150,7 @@ Future<void> _loadCoins() async {
                                   Navigator.push(
                                     context,
                                     MaterialPageRoute(
-                                     builder: (_) => const PercepcionMenuScreen(),
-
+                                      builder: (_) => const PercepcionMenuScreen(),
                                     ),
                                   );
                                 }
@@ -170,17 +165,17 @@ Future<void> _loadCoins() async {
               ],
             ),
           ),
-          const RetroBackButton(), // ← ESTE ES EL NOMBRE CORRECTO
+
+          const RetroBackButton(),
         ],
       ),
     );
   }
 }
 
-// 🔹 Mantienes tu _MindBlockCard y PurgatorioBackgroundPainter igual que antes
-
-
-/// ---------- BLOQUE DE NIVEL ----------
+/// -----------------------------
+/// CARTA DE CADA NIVEL
+/// -----------------------------
 class _MindBlockCard extends StatefulWidget {
   final String title;
   final String description;
@@ -217,8 +212,6 @@ class _MindBlockCardState extends State<_MindBlockCard> {
         decoration: BoxDecoration(
           color: const Color(0xFF2B1E40),
           borderRadius: BorderRadius.circular(20),
-
-          // 🌑 Sombras más intensas para efecto neumórfico pronunciado
           boxShadow: [
             BoxShadow(
               color: Colors.black.withOpacity(0.7),
@@ -239,8 +232,6 @@ class _MindBlockCardState extends State<_MindBlockCard> {
                 spreadRadius: 3,
               ),
           ],
-
-          // 🔹 Borde exterior luminoso dinámico
           border: Border.all(
             color: widget.color.withOpacity(widget.available ? 0.8 : 0.2),
             width: 1.8,
@@ -260,7 +251,6 @@ class _MindBlockCardState extends State<_MindBlockCard> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // Ícono con brillo sutil
                 Container(
                   padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
@@ -281,7 +271,6 @@ class _MindBlockCardState extends State<_MindBlockCard> {
                 ),
                 const SizedBox(height: 16),
 
-                // 🔹 Título
                 Text(
                   widget.title,
                   textAlign: TextAlign.center,
@@ -300,16 +289,13 @@ class _MindBlockCardState extends State<_MindBlockCard> {
                 ),
                 const SizedBox(height: 16),
 
-                // 🔹 Descripción con más visibilidad
                 Text(
                   widget.description,
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontFamily: 'VT323',
                     fontSize: isSmallScreen ? 22 : 24,
-                    color: widget.available
-                        ? Colors.white
-                        : const Color(0xFFAAAAAA),
+                    color: widget.available ? Colors.white : const Color(0xFFAAAAAA),
                     height: 1.4,
                     letterSpacing: 1.2,
                     fontWeight: FontWeight.w600,
@@ -321,6 +307,29 @@ class _MindBlockCardState extends State<_MindBlockCard> {
                     ],
                   ),
                 ),
+
+                /// 🔹 AQUI AGREGAMOS "PRÓXIMAMENTE DISPONIBLE"
+                if (!widget.available)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 10),
+                    child: Text(
+                      "Próximamente disponible",
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontFamily: 'PressStart2P',
+                        fontSize: isSmallScreen ? 8 : 10,
+                        color: widget.color.withOpacity(0.7),
+                        height: 1.6,
+                        letterSpacing: 1.5,
+                        shadows: [
+                          Shadow(
+                            color: widget.color.withOpacity(0.5),
+                            blurRadius: 6,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
               ],
             ),
           ),
@@ -330,8 +339,9 @@ class _MindBlockCardState extends State<_MindBlockCard> {
   }
 }
 
-
-/// ---------- FONDO RETRO ----------
+/// -----------------------------
+/// FONDO RETRO
+/// -----------------------------
 class PurgatorioBackgroundPainter extends CustomPainter {
   final double progress;
   PurgatorioBackgroundPainter(this.progress);

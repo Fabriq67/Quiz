@@ -21,10 +21,7 @@ class _PercepcionMenuScreenState extends State<PercepcionMenuScreen>
 
   int coins = 0;
 
-  Map<int, bool> unlocked = {
-    1: true,
-    2: false,
-  };
+  Map<int, bool> unlocked = {1: true, 2: false};
 
   final List<Map<String, dynamic>> blocks = [
     {
@@ -46,9 +43,9 @@ class _PercepcionMenuScreenState extends State<PercepcionMenuScreen>
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
-        vsync: this, duration: Duration(seconds: 6))
-      ..repeat();
+    _controller =
+        AnimationController(vsync: this, duration: Duration(seconds: 6))
+          ..repeat();
 
     _loadCoins();
     _loadUnlocks();
@@ -78,6 +75,10 @@ class _PercepcionMenuScreenState extends State<PercepcionMenuScreen>
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
+    final width = size.width;
+
+    // ASPECT RATIO DINÁMICO
+    final double cardAspectRatio = (width < 420) ? 0.70 : 1.0;
 
     return Scaffold(
       backgroundColor: Color(0xFF150C25),
@@ -100,18 +101,12 @@ class _PercepcionMenuScreenState extends State<PercepcionMenuScreen>
                   padding: EdgeInsets.symmetric(horizontal: 16),
                   child: GameHUD(
                     coins: coins,
-                    onOpenComodines: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (_) => ComodinesScreen()),
-                      );
-                    },
-                    onOpenJefes: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (_) => JefesScreen()),
-                      );
-                    },
+                    onOpenComodines: () =>
+                        Navigator.push(context,
+                            MaterialPageRoute(builder: (_) => ComodinesScreen())),
+                    onOpenJefes: () =>
+                        Navigator.push(context,
+                            MaterialPageRoute(builder: (_) => JefesScreen())),
                   ),
                 ),
 
@@ -136,7 +131,7 @@ class _PercepcionMenuScreenState extends State<PercepcionMenuScreen>
                       crossAxisCount: 2,
                       crossAxisSpacing: 20,
                       mainAxisSpacing: 20,
-                      childAspectRatio: 1.1,
+                      childAspectRatio: cardAspectRatio,
                     ),
                     itemCount: blocks.length,
                     itemBuilder: (context, index) {
@@ -152,15 +147,13 @@ class _PercepcionMenuScreenState extends State<PercepcionMenuScreen>
                         locked: !isUnlocked,
                         onTap: () {
                           if (!isUnlocked) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                backgroundColor: Colors.redAccent,
-                                content: Text(
-                                  "Debes completar el Bloque ${block["id"] - 1} primero.",
-                                  style: TextStyle(color: Colors.white),
-                                ),
+                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                              backgroundColor: Colors.redAccent,
+                              content: Text(
+                                "Debes completar el Bloque ${block["id"] - 1} primero.",
+                                style: TextStyle(color: Colors.white),
                               ),
-                            );
+                            ));
                             return;
                           }
 
@@ -183,11 +176,12 @@ class _PercepcionMenuScreenState extends State<PercepcionMenuScreen>
             ),
           ),
 
-          // Botón atrás FIX
-          Positioned(
-            top: 10,
-            left: 10,
-            child: RetroBackButton(),
+          Align(
+            alignment: Alignment.bottomLeft,
+            child: Padding(
+              padding: EdgeInsets.only(left: 16, bottom: 16),
+              child: RetroBackButton(),
+            ),
           ),
         ],
       ),
@@ -221,6 +215,8 @@ class _PercepcionBlockCardState extends State<_PercepcionBlockCard> {
 
   @override
   Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+    final isSmall = size.width < 430;
     final icon = widget.isBoss ? Icons.flash_on : Icons.visibility;
     final displayColor = widget.locked ? Colors.grey : widget.color;
 
@@ -229,48 +225,58 @@ class _PercepcionBlockCardState extends State<_PercepcionBlockCard> {
       onExit: (_) => !widget.locked ? setState(() => _hover = false) : null,
       child: AnimatedContainer(
         duration: Duration(milliseconds: 200),
+        height: isSmall ? 200 : 230,
+        width: isSmall ? 170 : 200,
         decoration: BoxDecoration(
-          color: Color(0xFF24133D)
-              .withOpacity(widget.locked ? 0.4 : 1),
-          borderRadius: BorderRadius.circular(22),
+          color: Color(0xFF24133D).withOpacity(widget.locked ? 0.4 : 1),
+          borderRadius: BorderRadius.circular(24),
           border: Border.all(color: displayColor, width: 2),
           boxShadow: [
             if (_hover && !widget.locked)
               BoxShadow(
                 color: displayColor.withOpacity(0.8),
-                blurRadius: 25,
-                spreadRadius: 3,
+                blurRadius: 20,
+                spreadRadius: 2,
               ),
           ],
         ),
         child: InkWell(
-          borderRadius: BorderRadius.circular(22),
+          borderRadius: BorderRadius.circular(24),
           onTap: widget.onTap,
           child: Padding(
-            padding: EdgeInsets.all(20),
+            padding: EdgeInsets.all(isSmall ? 12 : 16),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(icon, color: displayColor, size: 60),
-                SizedBox(height: 18),
+                Icon(
+                  icon,
+                  color: displayColor,
+                  size: isSmall ? 40 : 55,
+                ),
+
+                SizedBox(height: isSmall ? 12 : 16),
+
                 Text(
                   widget.title,
                   style: TextStyle(
                     fontFamily: 'PressStart2P',
-                    fontSize: 12,
+                    fontSize: isSmall ? 11 : 14,
                     color: displayColor,
                   ),
                   textAlign: TextAlign.center,
                 ),
-                SizedBox(height: 12),
+
+                SizedBox(height: isSmall ? 8 : 12),
+
                 Text(
                   "${widget.questions} preguntas",
                   style: TextStyle(
                     fontFamily: 'VT323',
-                    fontSize: 22,
-                    color: Colors.white70,
+                    fontSize: isSmall ? 18 : 24,
+                    color: Colors.white,
                   ),
                 ),
+
                 if (widget.locked)
                   Padding(
                     padding: EdgeInsets.only(top: 8),
@@ -278,9 +284,10 @@ class _PercepcionBlockCardState extends State<_PercepcionBlockCard> {
                       "Bloque bloqueado",
                       style: TextStyle(
                         fontFamily: "VT323",
-                        fontSize: 16,
+                        fontSize: isSmall ? 15 : 18,
                         color: Colors.redAccent,
                       ),
+                      textAlign: TextAlign.center,
                     ),
                   )
               ],
@@ -300,7 +307,7 @@ class _PercepcionBackgroundPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
       ..color = Color(0xFF00FFF7).withOpacity(0.08)
-      ..strokeWidth = 1.0;
+      ..strokeWidth = 1;
 
     for (double y = 0; y < size.height; y += 25) {
       canvas.drawLine(Offset(0, y), Offset(size.width, y), paint);

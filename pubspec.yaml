@@ -12,6 +12,16 @@ dependencies:
     sdk: flutter
   cupertino_icons: ^1.0.8
   shared_preferences: ^2.3.2
+  flutter_native_splash: ^2.4.7
+
+flutter_native_splash:
+  color: "#140B24"
+  image: assets/merlac.png
+  android: true
+  ios: true
+  android_12:
+    image: assets/merlac.png
+    color: "#140B24"
 
 dev_dependencies:
   flutter_test:
