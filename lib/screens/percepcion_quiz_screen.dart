@@ -314,21 +314,37 @@ class PercepcionResultadoScreen extends StatelessWidget {
                 ),
               ),
 
-              const SizedBox(height: 30),
+              const SizedBox(height: 55),
 
               ElevatedButton(
-                onPressed: () {
-                  // limpia TODAS las pantallas previas y te lleva al menú limpio
-                  Navigator.pushAndRemoveUntil(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const PercepcionMenuScreen(),
-                    ),
-                    (route) => false,
-                  );
-                },
-                child: const Text("Volver al menú"),
-              ),
+    style: ElevatedButton.styleFrom(
+      backgroundColor: const Color(0xFF24133D),        // mismo fondo retro
+      foregroundColor: Colors.cyanAccent,              // texto cian
+      padding: const EdgeInsets.symmetric(
+        vertical: 18,
+        horizontal: 12,
+      ),
+      elevation: 10,
+      shadowColor: Colors.cyanAccent.withOpacity(0.8), // brillo debajo
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(6),        // esquinas casi cuadradas = pixelado
+        side: const BorderSide(
+          color: Color.fromARGB(255, 155, 24, 255),
+          width: 3,                                    // borde grueso
+        ),
+      ),
+      textStyle: const TextStyle(
+        fontFamily: 'PressStart2P',                    // misma fuente retro
+        fontSize: 14,
+        letterSpacing: 2,
+      ),
+    ),
+    onPressed: () {
+      Navigator.of(context).pop(); // vuelve al menú anterior
+    },
+    child: const Text("VOLVER AL MENÚ"),
+  ),
+
             ],
           ),
         ),
