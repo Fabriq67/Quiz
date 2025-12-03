@@ -5,7 +5,7 @@ final retroTheme = ThemeData(
   colorScheme: const ColorScheme.dark(
     primary: Color(0xFFFF4B82), // rosa cálido tipo arcade
     secondary: Color(0xFF00FFF0), // cian retro
-    background: Color(0xFF1B0E2E),
+    surface: Color(0xFF1B0E2E),
   ),
   textTheme: const TextTheme(
     bodyMedium: TextStyle(

@@ -23,7 +23,7 @@ class _SelectLevelScreenState extends State<SelectLevelScreen>
   final levels = [
     {
       "title": "PURGATORIO MENTAL",
-      "desc": "Comienza el viaje del conocimiento. Lo fácil no existe.",
+      "desc": "Comienza el viaje del conocimiento.",
       "color": const Color(0xFF00FFF7),
       "available": true,
     },

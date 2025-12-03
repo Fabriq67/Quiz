@@ -1,0 +1,30 @@
+[
+  {
+    "id": "clarividencia",
+    "name": "Clarividencia",
+    "effect": "clarividencia",
+    "price": 5,
+    "color": "FF00FFF0"
+  },
+  {
+    "id": "corte_mental",
+    "name": "Corte Mental (50/50)",
+    "effect": "corte_mental",
+    "price": 7,
+    "color": "FF5A5AFF"
+  },
+  {
+    "id": "pulso_temporal",
+    "name": "Pulso Temporal (+10s)",
+    "effect": "pulso_temporal",
+    "price": 9,
+    "color": "FFFFD700"
+  },
+  {
+    "id": "sombra_cognitiva",
+    "name": "Sombra Cognitiva (Oculta 2)",
+    "effect": "sombra_cognitiva",
+    "price": 12,
+    "color": "FFAA00FF"
+  }
+]

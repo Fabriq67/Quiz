@@ -1,145 +1,145 @@
 import 'package:flutter/material.dart';
+import '../models/powerup_model.dart';
+import '../data/powerups_service.dart';
+import '../data/progress_manager.dart';
 
-class ComodinesScreen extends StatelessWidget {
+class ComodinesScreen extends StatefulWidget {
   const ComodinesScreen({super.key});
 
-  final List<Map<String, dynamic>> powerUps = const [
-    {
-      "icon": Icons.visibility_outlined,
-      "name": "Clarividencia",
-      "effect": "Elimina dos opciones incorrectas.",
-      "cost": 5,
-      "color": Color(0xFF00FFF0),
-    },
-    {
-      "icon": Icons.replay,
-      "name": "Rebobinar",
-      "effect": "Repite la última pregunta fallada.",
-      "cost": 8,
-      "color": Color(0xFF9B4DFF),
-    },
-    {
-      "icon": Icons.timer,
-      "name": "Instinto",
-      "effect": "Aumenta el tiempo disponible.",
-      "cost": 6,
-      "color": Color(0xFF00E676),
-    },
-    {
-      "icon": Icons.flash_on,
-      "name": "Visión Fugaz",
-      "effect": "Muestra la respuesta correcta por 2 segundos.",
-      "cost": 10,
-      "color": Color(0xFFFF3366),
-    },
-    {
-      "icon": Icons.control_point_duplicate,
-      "name": "Doble Mente",
-      "effect": "Duplica los puntos de la pregunta actual.",
-      "cost": 7,
-      "color": Color(0xFF42A5F5),
-    },
-  ];
+  @override
+  State<ComodinesScreen> createState() => _ComodinesScreenState();
+}
+
+class _ComodinesScreenState extends State<ComodinesScreen> {
+  List<PowerUp> allPowerUps = [];
+  List<String> unlockedIds = [];
+  List<PowerUp> selected = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadPowerUps();
+  }
+
+  Future<void> _loadPowerUps() async {
+    final jsonList = await PowerUpsService.loadPowerUps();
+    final progress = await ProgressManager.loadProgress();
+
+    setState(() {
+      allPowerUps = jsonList;
+      unlockedIds = progress.unlockedPowerUps; // ["clarividencia", ...]
+    });
+
+    // cargar selección previa
+    final selectedList = await ProgressManager.loadSelectedPowerUps();
+    setState(() => selected = selectedList);
+  }
+
+  void toggle(PowerUp p) {
+    if (!unlockedIds.contains(p.id)) return; // bloqueado → no tocar
+
+    setState(() {
+      if (selected.contains(p)) {
+        selected.remove(p);
+      } else {
+        selected = [p]; // solo 1 comodín equipado
+      }
+    });
+  }
+
+  Future<void> guardar() async {
+    await ProgressManager.saveSelectedPowerUps(selected);
+    Navigator.pop(context);
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFF150C25),
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
         title: const Text(
-          "Comodines Desbloqueados",
+          "Elige tu Comodín",
           style: TextStyle(fontFamily: "PressStart2P", fontSize: 10),
         ),
         centerTitle: true,
+        backgroundColor: Colors.transparent,
+        elevation: 0,
       ),
-      body: ListView.builder(
-        padding: const EdgeInsets.all(16),
-        itemCount: powerUps.length,
-        itemBuilder: (context, index) {
-          final p = powerUps[index];
+      body: ListView(
+        padding: const EdgeInsets.all(20),
+        children: [
+          for (final p in allPowerUps)
+            _buildPowerUpCard(p),
 
-          return Container(
-            margin: const EdgeInsets.only(bottom: 18),
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: const Color(0xFF24133D),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: p["color"], width: 1.5),
-              boxShadow: [
-                BoxShadow(
-                  color: p["color"].withOpacity(0.3),
-                  blurRadius: 12,
-                ),
-              ],
+          const SizedBox(height: 30),
+
+          ElevatedButton(
+            onPressed: guardar,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF00FFF0),
+              foregroundColor: Colors.black,
+              padding: const EdgeInsets.symmetric(vertical: 14),
             ),
-            child: Row(
-              children: [
-                Icon(
-                  p["icon"],
-                  color: p["color"],
-                  size: 40,
-                ),
-                const SizedBox(width: 16),
+            child: const Text(
+              "GUARDAR SELECCIÓN",
+              style: TextStyle(fontFamily: "PressStart2P", fontSize: 12),
+            ),
+          )
+        ],
+      ),
+    );
+  }
 
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      //  NOMBRE
-                      Text(
-                        p["name"],
-                        style: TextStyle(
-                          fontFamily: "PressStart2P",
-                          fontSize: 11,
-                          color: p["color"],
-                        ),
-                      ),
+  Widget _buildPowerUpCard(PowerUp p) {
+    final bool isUnlocked = unlockedIds.contains(p.id);
+    final bool isSelected = selected.contains(p);
 
-                      const SizedBox(height: 6),
-
-                      // EFECTO
-                      Text(
-                        p["effect"],
-                        style: const TextStyle(
-                          fontFamily: "VT323",
-                          fontSize: 20,
-                          color: Colors.white70,
-                        ),
-                      ),
-
-                      const SizedBox(height: 6),
-
-                      // COSTO
-                      Text(
-                        "Costo: ${p["cost"]} monedas",
-                        style: const TextStyle(
-                          fontFamily: "VT323",
-                          fontSize: 20,
-                          color: Colors.cyanAccent,
-                        ),
-                      ),
-
-                      const SizedBox(height: 10),
-
-                      // PROXIMAMENTE
-                      const Text(
-                        "Próximamente desbloqueable...",
-                        style: TextStyle(
-                          fontFamily: "VT323",
-                          fontSize: 18,
-                          color: Colors.white38,
-                          fontStyle: FontStyle.italic,
-                        ),
-                      ),
-                    ],
+    return Opacity(
+      opacity: isUnlocked ? 1 : 0.3, // bloqueados casi grises
+      child: GestureDetector(
+        onTap: () {
+          if (isUnlocked) toggle(p);
+        },
+        child: Container(
+          margin: const EdgeInsets.only(bottom: 18),
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: const Color(0xFF24133D),
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(
+              color: isSelected ? p.color : Colors.white24,
+              width: isSelected ? 3 : 1,
+            ),
+          ),
+          child: Row(
+            children: [
+              Icon(
+                isUnlocked ? p.icon : Icons.lock,
+                color: isUnlocked ? p.color : Colors.white38,
+                size: 40,
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Text(
+                  p.name,
+                  style: TextStyle(
+                    fontFamily: "PressStart2P",
+                    fontSize: 11,
+                    color: isUnlocked ? p.color : Colors.white38,
                   ),
                 ),
-              ],
-            ),
-          );
-        },
+              ),
+              Text(
+                "${p.price}",
+                style: TextStyle(
+                  color: isUnlocked ? p.color : Colors.white38,
+                  fontFamily: "PressStart2P",
+                  fontSize: 12,
+                ),
+              )
+            ],
+          ),
+        ),
       ),
     );
   }

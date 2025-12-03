@@ -6,7 +6,9 @@ import '../hud_widget.dart';
 import '/comodines_screen.dart';
 import 'percepcion_quiz_screen.dart';
 import '/jefes_screen.dart';
-import '../widgets/back_button_widget.dart';
+
+// 🔥 IMPORTA EL MENÚ DEL PURGATORIO
+import '../purgatorio_screen.dart';
 
 class PercepcionMenuScreen extends StatefulWidget {
   const PercepcionMenuScreen({super.key});
@@ -21,7 +23,9 @@ class _PercepcionMenuScreenState extends State<PercepcionMenuScreen>
 
   int coins = 0;
 
+  // mantenemos unlocked y completados para mostrar estado exacto
   Map<int, bool> unlocked = {1: true, 2: false};
+  Map<int, bool> completed = {1: false, 2: false};
 
   final List<Map<String, dynamic>> blocks = [
     {
@@ -29,14 +33,17 @@ class _PercepcionMenuScreenState extends State<PercepcionMenuScreen>
       "title": "Bloque 1",
       "questions": 5,
       "isBoss": false,
-      "color": Color(0xFF00FFF0),
+      "color": const Color(0xFF00FFF0),
+      "bossName": null,
     },
     {
       "id": 2,
       "title": "Bloque 2 (Jefe)",
       "questions": 10,
       "isBoss": true,
-      "color": Color(0xFFFF3366),
+      "color": const Color(0xFFFF3366),
+      // + Nombre del jefe (solo nombre, según petición)
+      "bossName": "La sombra del ojo",
     },
   ];
 
@@ -45,131 +52,42 @@ class _PercepcionMenuScreenState extends State<PercepcionMenuScreen>
     super.initState();
 
     _controller =
-        AnimationController(vsync: this, duration: Duration(seconds: 6))
+        AnimationController(vsync: this, duration: const Duration(seconds: 6))
           ..repeat();
 
     _loadCoins();
     _loadUnlocks();
-
-    // 🔥 MOSTRAR TUTORIAL SOLO UNA VEZ
-    Future.delayed(const Duration(milliseconds: 500), () async {
-      bool seen = await ProgressManager.wasTutorialShown("tutorial_percepcion");
-
-      if (!seen) {
-        _showPercepcionTutorial();
-        await ProgressManager.setTutorialShown("tutorial_percepcion");
-      }
-    });
   }
 
-  /// ------------------------------
-  /// VENTANA TUTORIAL
-  /// ------------------------------
-  void _showPercepcionTutorial() {
-    showDialog(
-      context: context,
-      barrierDismissible: true,
-      builder: (context) {
-        return Center(
-          child: Container(
-            width: 360,
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              color: const Color(0xFF2B1E40),
-              borderRadius: BorderRadius.circular(22),
-              border: Border.all(
-                color: const Color(0xFF00FFF0),
-                width: 3,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: const Color(0xFF00FFF0).withOpacity(0.4),
-                  blurRadius: 25,
-                  spreadRadius: 3,
-                ),
-              ],
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  "MUNDO: PERCEPCIÓN",
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontFamily: "PressStart2P",
-                    fontSize: 13,
-                    color: const Color(0xFF00FFF0),
-                    shadows: [
-                      Shadow(
-                        blurRadius: 10,
-                        color: const Color(0xFFFF4B82),
-                      ),
-                    ],
-                  ),
-                ),
-
-                const SizedBox(height: 20),
-
-                const Text(
-                  "Selecciona un BLOQUE para comenzar.\n\n"
-                  "Solo UNA respuesta es correcta. Tienes un cronómetro activo.\n\n"
-                  "A medida que avances, el tiempo será menor,\n"
-                  "y las preguntas más engañosas…\n\n"
-                  "Prepárate y enfrenta los desafíos.\n\n"
-                  "¡Suerte, guerrero mental!",
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontFamily: "VT323",
-                    fontSize: 26,
-                    color: Colors.white,
-                    height: 1.35,
-                  ),
-                ),
-
-                const SizedBox(height: 30),
-
-                GestureDetector(
-                  onTap: () => Navigator.pop(context),
-                  child: Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 40, vertical: 14),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFFF4B82),
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(
-                        color: const Color(0xFF00FFF0),
-                        width: 2,
-                      ),
-                    ),
-                    child: const Text(
-                      "ENTRAR",
-                      style: TextStyle(
-                        fontFamily: "PressStart2P",
-                        fontSize: 14,
-                        color: Colors.white,
-                        letterSpacing: 2,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  /// ------------------------------
-  /// LOAD DATA
-  /// ------------------------------
   Future<void> _loadUnlocks() async {
     final u1 = await ProgressManager.isBlockUnlocked(1);
     final u2 = await ProgressManager.isBlockUnlocked(2);
+    final c1 = await ProgressManager.isBlockCompleted(1);
+    final c2 = await ProgressManager.isBlockCompleted(2);
+
+    // mostrar aviso si el nivel fue reiniciado en otra parte
+    final wasReset = await ProgressManager.getBool("percepcion_reset");
+    if (wasReset) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            backgroundColor: Colors.redAccent,
+            content: Text(
+              "Progreso del nivel reiniciado. Vuelve a empezar desde Bloque 1.",
+              style: TextStyle(color: Colors.white),
+            ),
+          ),
+        );
+      });
+      await ProgressManager.saveBool("percepcion_reset", false);
+    }
 
     setState(() {
       unlocked[1] = u1;
       unlocked[2] = u2;
+      completed[1] = c1;
+      completed[2] = c2;
     });
   }
 
@@ -184,18 +102,28 @@ class _PercepcionMenuScreenState extends State<PercepcionMenuScreen>
     super.dispose();
   }
 
-  /// ------------------------------
-  /// UI PRINCIPAL
-  /// ------------------------------
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
     final width = size.width;
-
     final double cardAspectRatio = (width < 420) ? 0.70 : 1.0;
 
     return Scaffold(
-      backgroundColor: Color(0xFF150C25),
+      backgroundColor: const Color(0xFF150C25),
+
+      // 🔥 BOTÓN INDEPENDIENTE (FUNCIONA SIEMPRE)
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: const Color(0xFF00FFF0),
+        heroTag: "backToPurgatorio",
+        onPressed: () {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (_) => const PurgatorioScreen()),
+          );
+        },
+        child: const Icon(Icons.arrow_back, color: Colors.black),
+      ),
+
       body: Stack(
         children: [
           AnimatedBuilder(
@@ -209,22 +137,27 @@ class _PercepcionMenuScreenState extends State<PercepcionMenuScreen>
           SafeArea(
             child: Column(
               children: [
-                SizedBox(height: 8),
+                const SizedBox(height: 8),
 
                 Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 16),
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: GameHUD(
                     coins: coins,
-                    onOpenComodines: () => Navigator.push(context,
-                        MaterialPageRoute(builder: (_) => ComodinesScreen())),
-                    onOpenJefes: () => Navigator.push(context,
-                        MaterialPageRoute(builder: (_) => JefesScreen())),
+                    onOpenComodines: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (_) => const ComodinesScreen()),
+                    ).then((_) => _loadCoins()),
+                    onOpenJefes: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const JefesScreen()),
+                    ),
                   ),
                 ),
 
-                SizedBox(height: 24),
+                const SizedBox(height: 24),
 
-                Text(
+                const Text(
                   "PERCEPCIÓN",
                   style: TextStyle(
                     fontFamily: 'PressStart2P',
@@ -234,11 +167,11 @@ class _PercepcionMenuScreenState extends State<PercepcionMenuScreen>
                   ),
                 ),
 
-                SizedBox(height: 24),
+                const SizedBox(height: 24),
 
                 Expanded(
                   child: GridView.builder(
-                    padding: EdgeInsets.all(24),
+                    padding: const EdgeInsets.all(24),
                     gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: 2,
                       crossAxisSpacing: 20,
@@ -248,24 +181,34 @@ class _PercepcionMenuScreenState extends State<PercepcionMenuScreen>
                     itemCount: blocks.length,
                     itemBuilder: (context, index) {
                       final block = blocks[index];
-                      final bool isUnlocked =
-                          unlocked[block["id"]] ?? false;
+                      final int id = block["id"] as int;
+
+                      // bloque jugable sólo si está desbloqueado Y no completado
+                      final bool isUnlocked = unlocked[id] ?? false;
+                      final bool isCompleted = completed[id] ?? false;
+                      final bool isPlayable = isUnlocked && !isCompleted;
 
                       return _PercepcionBlockCard(
-                        title: block["title"],
-                        questions: block["questions"],
-                        isBoss: block["isBoss"],
-                        color: block["color"],
-                        locked: !isUnlocked,
+                        title: block["title"] as String,
+                        questions: block["questions"] as int,
+                        isBoss: block["isBoss"] as bool,
+                        color: block["color"] as Color,
+                        locked: !isPlayable,
+                        bossName: block["bossName"] as String?,
                         onTap: () {
-                          if (!isUnlocked) {
-                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                              backgroundColor: Colors.redAccent,
-                              content: Text(
-                                "Debes completar el Bloque ${block["id"] - 1} primero.",
-                                style: TextStyle(color: Colors.white),
+                          if (!isPlayable) {
+                            final message = isCompleted
+                                ? "Bloque ya completado."
+                                : "Debes completar el bloque previo.";
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                backgroundColor: Colors.redAccent,
+                                content: Text(
+                                  message,
+                                  style: const TextStyle(color: Colors.white),
+                                ),
                               ),
-                            ));
+                            );
                             return;
                           }
 
@@ -273,26 +216,21 @@ class _PercepcionMenuScreenState extends State<PercepcionMenuScreen>
                             context,
                             MaterialPageRoute(
                               builder: (_) => PercepcionQuizScreen(
-                                blockId: block["id"],
-                                totalQuestions: block["questions"],
-                                isBoss: block["isBoss"],
+                                blockId: block["id"] as int,
+                                totalQuestions: block["questions"] as int,
+                                isBoss: block["isBoss"] as bool,
                               ),
                             ),
-                          ).then((_) => _loadUnlocks());
+                          ).then((_) {
+                            _loadCoins();
+                            _loadUnlocks();
+                          });
                         },
                       );
                     },
                   ),
                 ),
               ],
-            ),
-          ),
-
-          Align(
-            alignment: Alignment.bottomLeft,
-            child: Padding(
-              padding: EdgeInsets.only(left: 16, bottom: 16),
-              child: RetroBackButton(),
             ),
           ),
         ],
@@ -307,6 +245,7 @@ class _PercepcionBlockCard extends StatefulWidget {
   final bool isBoss;
   final Color color;
   final bool locked;
+  final String? bossName;
   final VoidCallback onTap;
 
   const _PercepcionBlockCard({
@@ -316,6 +255,7 @@ class _PercepcionBlockCard extends StatefulWidget {
     required this.color,
     required this.locked,
     required this.onTap,
+    this.bossName,
   });
 
   @override
@@ -336,11 +276,11 @@ class _PercepcionBlockCardState extends State<_PercepcionBlockCard> {
       onEnter: (_) => !widget.locked ? setState(() => _hover = true) : null,
       onExit: (_) => !widget.locked ? setState(() => _hover = false) : null,
       child: AnimatedContainer(
-        duration: Duration(milliseconds: 200),
+        duration: const Duration(milliseconds: 200),
         height: isSmall ? 200 : 230,
         width: isSmall ? 170 : 200,
         decoration: BoxDecoration(
-          color: Color(0xFF24133D).withOpacity(widget.locked ? 0.4 : 1),
+          color: const Color(0xFF24133D).withOpacity(widget.locked ? 0.4 : 1),
           borderRadius: BorderRadius.circular(24),
           border: Border.all(color: displayColor, width: 2),
           boxShadow: [
@@ -360,14 +300,8 @@ class _PercepcionBlockCardState extends State<_PercepcionBlockCard> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(
-                  icon,
-                  color: displayColor,
-                  size: isSmall ? 40 : 55,
-                ),
-
+                Icon(icon, color: displayColor, size: isSmall ? 40 : 55),
                 SizedBox(height: isSmall ? 12 : 16),
-
                 Text(
                   widget.title,
                   style: TextStyle(
@@ -377,9 +311,20 @@ class _PercepcionBlockCardState extends State<_PercepcionBlockCard> {
                   ),
                   textAlign: TextAlign.center,
                 ),
-
+                if (widget.isBoss && (widget.bossName?.isNotEmpty ?? false))
+                  Padding(
+                    padding: EdgeInsets.only(top: isSmall ? 6 : 8),
+                    child: Text(
+                      widget.bossName!,
+                      style: TextStyle(
+                        fontFamily: 'VT323',
+                        fontSize: isSmall ? 12 : 14,
+                        color: Colors.white70,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
                 SizedBox(height: isSmall ? 8 : 12),
-
                 Text(
                   "${widget.questions} preguntas",
                   style: TextStyle(
@@ -388,10 +333,9 @@ class _PercepcionBlockCardState extends State<_PercepcionBlockCard> {
                     color: Colors.white,
                   ),
                 ),
-
                 if (widget.locked)
                   Padding(
-                    padding: EdgeInsets.only(top: 8),
+                    padding: const EdgeInsets.only(top: 8),
                     child: Text(
                       "Bloque bloqueado",
                       style: TextStyle(
@@ -418,7 +362,7 @@ class _PercepcionBackgroundPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = Color(0xFF00FFF7).withOpacity(0.08)
+      ..color = const Color(0xFF00FFF7).withOpacity(0.08)
       ..strokeWidth = 1;
 
     for (double y = 0; y < size.height; y += 25) {
@@ -426,8 +370,7 @@ class _PercepcionBackgroundPainter extends CustomPainter {
     }
 
     for (double x = 0; x < size.width; x += 25) {
-      final offset =
-          math.sin(progress * 2 * math.pi + x / 50) * 4;
+      final offset = math.sin(progress * 2 * math.pi + x / 50) * 4;
       canvas.drawLine(
         Offset(x + offset, 0),
         Offset(x - offset, size.height),

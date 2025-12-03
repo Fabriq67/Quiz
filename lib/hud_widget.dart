@@ -5,7 +5,7 @@ class GameHUD extends StatelessWidget {
   final VoidCallback onOpenComodines;
   final VoidCallback onOpenJefes;
 
-  GameHUD({
+  const GameHUD({
     super.key,
     required this.coins,
     required this.onOpenComodines,
