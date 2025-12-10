@@ -1,4 +1,3 @@
-import 'dart:math';
 import 'package:flutter/material.dart';
 import '../models/powerup_model.dart';
 import '../models/pregunta_model.dart';
@@ -17,39 +16,39 @@ class PowerUpEngine {
     required BuildContext context,
   }) {
     final data = powerUp.toJson();
-    final id = data["id"];
-    final price = data["price"] ?? 0;
+    final String id = data["id"].toString();  // aseguramos string
+    final int price = data["price"] ?? 0;
 
-    // Verificar monedas
+    // ---------------------------
+    // VERIFICAR MONEDAS
+    // ---------------------------
     if (coins < price) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("No tienes suficientes monedas.")),
       );
-      return {
-        "success": false,
-      };
+      return {"success": false};
     }
 
     // Gastar monedas
     onCoinsUsed(price);
 
-    // ---------------------------
-    // CLARIVIDENCIA
-    // ---------------------------
+    // -------------------------------------------------------------------
+    // 1) CLARIVIDENCIA → Revela la respuesta correcta
+    // -------------------------------------------------------------------
     if (id == "clarividencia") {
       onHint(pregunta.correcta);
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("La respuesta correcta fue revelada.")),
+        const SnackBar(content: Text("Clarividencia activada.")),
       );
 
-      return {"success": true, "type": "hint"};
+      return {"success": true, "type": "clarividencia"};
     }
 
-    // ---------------------------
-    // 50/50 UNIVERSAL
-    // ---------------------------
-    if (id == "5050") {
+    // -------------------------------------------------------------------
+    // 2) CORTE MENTAL → 50/50 (quita 2 incorrectas)
+    // -------------------------------------------------------------------
+    if (id == "corte_mental") {
       final incorrectas = pregunta.opciones
           .where((o) => o != pregunta.correcta)
           .toList();
@@ -61,26 +60,52 @@ class PowerUpEngine {
       onHideOptions(remove);
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Se eliminaron ${remove.length} opciones.")),
+        SnackBar(content: Text("Corte Mental eliminó ${remove.length} opciones.")),
       );
 
-      return {"success": true, "type": "5050"};
+      return {"success": true, "type": "corte_mental"};
     }
 
-    // ---------------------------
-    // TIEMPO EXTRA
-    // ---------------------------
-    if (id == "tiempo_extra") {
+    // -------------------------------------------------------------------
+    // 3) PULSO TEMPORAL → +10 segundos
+    // -------------------------------------------------------------------
+    if (id == "pulso_temporal") {
       onTimeAdded(10);
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("+10 segundos agregados.")),
+        const SnackBar(content: Text("+10 segundos gracias a Pulso Temporal.")),
       );
 
-      return {"success": true, "type": "time"};
+      return {"success": true, "type": "pulso_temporal"};
     }
 
-    // Si el ID no existe
+    // -------------------------------------------------------------------
+    // 4) SOMBRA COGNITIVA → Oculta todas excepto 2 opciones
+    // -------------------------------------------------------------------
+       // -------------------------------------------------------------------
+    // 4) SOMBRA COGNITIVA → Oculta 1 opción incorrecta
+    // -------------------------------------------------------------------
+    if (id == "sombra_cognitiva") {
+      final incorrectas = pregunta.opciones
+          .where((o) => o != pregunta.correcta)
+          .toList();
+
+      incorrectas.shuffle();
+
+      final ocultar = incorrectas.take(1).toList(); // ✅ Solo oculta 1
+
+      onHideOptions(ocultar);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Sombra Cognitiva ocultó 1 opción.")),
+      );
+
+      return {"success": true, "type": "sombra_cognitiva"};
+    }
+
+    // ---------------------------
+    // DEFAULT
+    // ---------------------------
     return {"success": false};
   }
 }

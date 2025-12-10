@@ -6,7 +6,10 @@ import 'comodines_screen.dart';
 import 'jefes_screen.dart';
 import '../data/progress_manager.dart';
 import 'screens/percepcion_menu.dart';
-import '../widgets/back_button_widget.dart';
+import 'screens/logica_menu_screen.dart';
+import 'screens/ciencia_menu_screen.dart';
+import 'screens/cultura_menu_screen.dart';
+import 'select_level_screen.dart';
 
 class PurgatorioScreen extends StatefulWidget {
   const PurgatorioScreen({super.key});
@@ -21,48 +24,35 @@ class _PurgatorioScreenState extends State<PurgatorioScreen>
 
   int coins = 0;
   bool _tutorialShown = false;
+  bool _isLiberated = false; // ✅ NUEVO: indica si completó todos los niveles
 
   final blocks = [
     {
       "title": "PERCEPCIÓN",
       "desc": "Ve más allá de lo evidente.",
       "icon": Icons.visibility,
-      "color": Color(0xFF00FFF0),
+      "color": Color(0xFF5A9FB8),
       "available": true,
     },
     {
       "title": "LÓGICA",
-      "desc": "Completa 'Percepción' para desbloquear este nivel.",
+      "desc": "Completa 'Percepción' para desbloquear.",
       "icon": Icons.extension,
-      "color": Color(0xFF4C6FFF),
-      "available": false,
-    },
-    {
-      "title": "MEMORIA",
-      "desc": "Completa 'Lógica' para desbloquear este nivel.",
-      "icon": Icons.memory,
-      "color": Color(0xFFFFD700),
+      "color": Color(0xFF6B7BC4),
       "available": false,
     },
     {
       "title": "CIENCIA Y TECNOLOGÍA",
-      "desc": "Completa 'Memoria' para acceder aquí.",
+      "desc": "Completa 'Lógica' para acceder.",
       "icon": Icons.science,
-      "color": Color(0xFF32CD32),
+      "color": Color(0xFF5B9970),
       "available": false,
     },
     {
       "title": "CULTURA GENERAL",
-      "desc": "Completa 'Ciencia y Tecnología' para desbloquear.",
+      "desc": "Completa 'Ciencia y Tecnología' para el juicio final.",
       "icon": Icons.public,
-      "color": Color(0xFFFFA500),
-      "available": false,
-    },
-    {
-      "title": "JUICIO CRÍTICO",
-      "desc": "Completa todos los niveles para acceder al juicio final.",
-      "icon": Icons.flash_on,
-      "color": Color(0xFFFF4B82),
+      "color": Color(0xFFB8667A),
       "available": false,
     },
   ];
@@ -71,12 +61,15 @@ class _PurgatorioScreenState extends State<PurgatorioScreen>
   void initState() {
     super.initState();
 
-    _controller =
-        AnimationController(vsync: this, duration: Duration(seconds: 5))
-          ..repeat();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 8),
+    )..repeat();
 
     _loadCoins();
     _loadTutorialState();
+    _loadUnlockedLevels();
+    _checkLiberation(); // ✅ NUEVO
   }
 
   Future<void> _loadCoins() async {
@@ -84,49 +77,79 @@ class _PurgatorioScreenState extends State<PurgatorioScreen>
     setState(() => coins = progress.coins);
   }
 
-  /// 🔄 Actualiza las monedas cuando vuelves del quiz
   void _refreshCoins() async {
     final progress = await ProgressManager.loadProgress();
     setState(() => coins = progress.coins);
   }
 
-  /// 📌 Cargar si el tutorial ya fue mostrado
+  Future<void> _loadUnlockedLevels() async {
+    final progress = await ProgressManager.loadProgress();
+    final unlocked = progress.unlockedLevels;
+
+    blocks[0]["available"] = true;
+    blocks[1]["available"] = unlocked.contains("logica");
+    blocks[2]["available"] = unlocked.contains("ciencia");
+    blocks[3]["available"] = unlocked.contains("cultura");
+
+    setState(() {});
+  }
+
+  // ✅ NUEVO: verificar si derrotó a los 4 jefes
+  Future<void> _checkLiberation() async {
+    final boss1 = await ProgressManager.isBossDefeated("boss_percepcion");
+    final boss2 = await ProgressManager.isBossDefeated("boss_logica");
+    final boss3 = await ProgressManager.isBossDefeated("boss_ciencia");
+    final boss4 = await ProgressManager.isBossDefeated("boss_cultura_4");
+
+    setState(() {
+      _isLiberated = boss1 && boss2 && boss3 && boss4;
+    });
+  }
+
   Future<void> _loadTutorialState() async {
     _tutorialShown =
         await ProgressManager.getBool("tutorial_purgatorio_shown") ?? false;
 
     if (!_tutorialShown) {
       Future.delayed(
-        Duration(milliseconds: 500),
+        const Duration(milliseconds: 500),
         () => _showPurgatorioTutorial(),
       );
     }
   }
 
-  /// 📌 Guardar que el tutorial ya se vio
   Future<void> _setTutorialSeen() async {
     await ProgressManager.saveBool("tutorial_purgatorio_shown", true);
   }
 
-  /// 🪧 Ventana de tutorial
   void _showPurgatorioTutorial() {
     showDialog(
       context: context,
       barrierDismissible: true,
       builder: (context) {
+        final size = MediaQuery.of(context).size;
+        final small = size.width < 380;
+        final titleSize = small ? 20.0 : 24.0;
+        final bodySize = small ? 24.0 : 28.0;
+        final buttonSize = small ? 13.0 : 15.0;
+
         return Center(
           child: Container(
-            width: 360,
-            padding: EdgeInsets.all(24),
+            width: math.min(size.width * 0.9, 420),
+            padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
-              color: Color(0xFF2B1E40),
+              gradient: const LinearGradient(
+                colors: [Color(0xFF15152B), Color(0xFF0F1A2F)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
               borderRadius: BorderRadius.circular(22),
-              border: Border.all(color: Color(0xFF00FFF0), width: 3),
+              border: Border.all(color: const Color(0xFF5A9FB8), width: 3),
               boxShadow: [
                 BoxShadow(
-                  color: Color(0xFF00FFF0).withOpacity(0.4),
-                  blurRadius: 25,
-                  spreadRadius: 3,
+                  color: const Color(0xFF5A9FB8).withOpacity(0.35),
+                  blurRadius: 28,
+                  spreadRadius: 4,
                 ),
               ],
             ),
@@ -138,17 +161,18 @@ class _PurgatorioScreenState extends State<PurgatorioScreen>
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontFamily: "PressStart2P",
-                    fontSize: 16,
-                    color: Color(0xFFFF4B82),
-                    shadows: [
+                    fontSize: titleSize,
+                    color: const Color(0xFFFFB84D),
+                    letterSpacing: 1.5,
+                    shadows: const [
                       Shadow(
                         blurRadius: 10,
-                        color: Color(0xFF00FFF0),
+                        color: Color(0xFFFFB84D),
                       ),
                     ],
                   ),
                 ),
-                SizedBox(height: 20),
+                const SizedBox(height: 20),
                 Text(
                   "Este es el PURGATORIO MENTAL.\n\n"
                   "Escoge PERCEPCIÓN para iniciar tu aventura.\n\n"
@@ -157,29 +181,40 @@ class _PurgatorioScreenState extends State<PurgatorioScreen>
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontFamily: "VT323",
-                    fontSize: 26,
-                    color: Colors.white,
-                    height: 1.3,
+                    fontSize: bodySize,
+                    color: const Color(0xFFEFF4FF),
+                    height: 1.35,
                   ),
                 ),
-                SizedBox(height: 30),
+                const SizedBox(height: 28),
                 GestureDetector(
                   onTap: () {
                     _setTutorialSeen();
                     Navigator.pop(context);
                   },
                   child: Container(
-                    padding: EdgeInsets.symmetric(horizontal: 40, vertical: 14),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 40,
+                      vertical: 16,
+                    ),
                     decoration: BoxDecoration(
-                      color: Color(0xFFFF4B82),
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: Color(0xFF00FFF0), width: 2),
+                      color: const Color(0xFFFFB84D),
+                      borderRadius: BorderRadius.circular(12),
+                      border:
+                          Border.all(color: const Color(0xFF5A9FB8), width: 2),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFFFFB84D).withOpacity(0.35),
+                          blurRadius: 16,
+                          spreadRadius: 2,
+                        ),
+                      ],
                     ),
                     child: Text(
                       "ENTRAR",
                       style: TextStyle(
                         fontFamily: "PressStart2P",
-                        fontSize: 14,
+                        fontSize: buttonSize,
                         color: Colors.white,
                         letterSpacing: 2,
                       ),
@@ -191,7 +226,7 @@ class _PurgatorioScreenState extends State<PurgatorioScreen>
           ),
         );
       },
-    );
+    ).then((_) => _setTutorialSeen()); // ✅ Se marca visto aunque lo cierre
   }
 
   @override
@@ -200,93 +235,235 @@ class _PurgatorioScreenState extends State<PurgatorioScreen>
     super.dispose();
   }
 
-  /// 🧠 UI PRINCIPAL
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
     final small = size.width < 450;
 
     return Scaffold(
-      backgroundColor: Color(0xFF1B0E2E),
+      backgroundColor: _isLiberated
+          ? const Color(0xFFFFE8CC) // ✅ Fondo cálido (liberado)
+          : const Color(0xFF0D0D1A), // Purgatorio oscuro
       body: Stack(
         children: [
+          // ✅ Fondo animado: LLUVIA vs HOJAS + SOL
           AnimatedBuilder(
             animation: _controller,
-            builder: (context, _) =>
-                CustomPaint(painter: PurgatorioBackgroundPainter(_controller.value)),
+            builder: (context, _) => CustomPaint(
+              painter: _isLiberated
+                  ? LiberationPainter(_controller.value) // ✅ NUEVO
+                  : RainPainter(_controller.value),
+              size: size,
+            ),
           ),
 
           SafeArea(
             child: Column(
               children: [
-                /// ⭐ HUD CON MONEDAS
+                const SizedBox(height: 12),
                 GameHUD(
                   coins: coins,
                   onOpenComodines: () => Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (_) => ComodinesScreen()),
+                    MaterialPageRoute(builder: (_) => const ComodinesScreen()),
                   ).then((_) => _refreshCoins()),
-
                   onOpenJefes: () => Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (_) => JefesScreen()),
+                    MaterialPageRoute(builder: (_) => const JefesScreen()),
                   ).then((_) => _refreshCoins()),
                 ),
 
-                /// 🧩 GRID DE NIVELES
+                const SizedBox(height: 20),
+
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Text(
+                    _isLiberated ? "LIBERACIÓN MENTAL" : "PURGATORIO MENTAL",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontFamily: 'PressStart2P',
+                      fontSize: small ? 16 : 20,
+                      color: _isLiberated
+                          ? const Color(0xFFFFB84D) // ✅ Dorado cálido
+                          : const Color(0xFF5A9FB8),
+                      letterSpacing: 2,
+                      shadows: [
+                        Shadow(
+                          blurRadius: 12,
+                          color: _isLiberated
+                              ? const Color(0xFFFFB84D)
+                              : const Color(0xFF5A9FB8),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 30),
+
                 Expanded(
                   child: GridView.builder(
-                    padding: EdgeInsets.all(20),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: small ? 16 : 30,
+                      vertical: 10,
+                    ),
                     gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: small ? 1 : 2,
-                      crossAxisSpacing: 20,
-                      mainAxisSpacing: 20,
-                      childAspectRatio: small ? 1.2 : 1.1,
+                      crossAxisSpacing: small ? 16 : 24,
+                      mainAxisSpacing: small ? 16 : 24,
+                      childAspectRatio: small ? 1.3 : 1.15,
                     ),
                     itemCount: blocks.length,
                     itemBuilder: (context, index) {
                       final block = blocks[index];
 
-                  return _MindBlockCard(
-  title: block["title"] as String,
-  description: block["desc"] as String,
-  icon: block["icon"] as IconData,
-  color: block["color"] as Color,
-  available: block["available"] as bool,
-  onTap: () {
-    if (block["available"] == true) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (_) => const PercepcionMenuScreen()),
-      ).then((_) => _refreshCoins());
-    }
-  },
-);
+                      return _MindBlockCard(
+                        title: block["title"] as String,
+                        description: block["desc"] as String,
+                        icon: block["icon"] as IconData,
+                        color: block["color"] as Color,
+                        available: block["available"] as bool,
+                        isLiberated: _isLiberated, // ✅ NUEVO
+                        onTap: () {
+                          if ((block["available"] as bool) == false) return;
 
+                          if (block["title"] == "PERCEPCIÓN") {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const PercepcionMenuScreen(),
+                              ),
+                            ).then((_) {
+                              _refreshCoins();
+                              _loadUnlockedLevels();
+                              _checkLiberation(); // ✅ RECARGAR LIBERACIÓN
+                            });
+                          }
+
+                          if (block["title"] == "LÓGICA") {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (_) => LogicaMenuScreen()),
+                            ).then((_) {
+                              _refreshCoins();
+                              _loadUnlockedLevels();
+                              _checkLiberation();
+                            });
+                          }
+
+                          if (block["title"] == "CIENCIA Y TECNOLOGÍA") {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (_) => const CienciaMenuScreen()),
+                            ).then((_) {
+                              _refreshCoins();
+                              _loadUnlockedLevels();
+                              _checkLiberation();
+                            });
+                          }
+
+                          if (block["title"] == "CULTURA GENERAL") {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (_) => const CulturaMenuScreen()),
+                            ).then((_) {
+                              _refreshCoins();
+                              _loadUnlockedLevels();
+                              _checkLiberation();
+                            });
+                          }
+                        },
+                      );
                     },
                   ),
                 ),
+
+                const SizedBox(height: 80),
               ],
             ),
           ),
 
-          /// 🔙 BOTÓN RETRO
-          RetroBackButton(),
+          Positioned(
+            left: 20,
+            bottom: 20,
+            child: GestureDetector(
+              onTap: () {
+                Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(builder: (_) => const SelectLevelScreen()),
+                  (route) => false,
+                );
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 16,
+                ),
+                decoration: BoxDecoration(
+                  color: _isLiberated
+                      ? const Color(0xFFFFD89E).withOpacity(0.9)
+                      : const Color(0xFF1A1A2E),
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(
+                    color: _isLiberated
+                        ? const Color(0xFFFFB84D)
+                        : const Color(0xFF5A9FB8),
+                    width: 2.5,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: (_isLiberated
+                              ? const Color(0xFFFFB84D)
+                              : const Color(0xFF5A9FB8))
+                          .withOpacity(0.4),
+                      blurRadius: 16,
+                      spreadRadius: 2,
+                    ),
+                  ],
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.arrow_back_rounded,
+                      color: _isLiberated
+                          ? const Color(0xFFFFB84D)
+                          : const Color(0xFF5A9FB8),
+                      size: 28,
+                    ),
+                    const SizedBox(width: 12),
+                    Text(
+                      "MENU",
+                      style: TextStyle(
+                        fontFamily: 'PressStart2P',
+                        fontSize: 14,
+                        color: _isLiberated
+                            ? const Color(0xFFFFB84D)
+                            : const Color(0xFF5A9FB8),
+                        letterSpacing: 1.5,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
         ],
       ),
     );
   }
 }
 
-/// -----------------------------------------------------------
-///   TARJETAS DE LOS NIVELES
-/// -----------------------------------------------------------
 class _MindBlockCard extends StatelessWidget {
   final String title;
   final String description;
   final IconData icon;
   final Color color;
   final bool available;
+  final bool isLiberated; // ✅ NUEVO
   final VoidCallback onTap;
 
   const _MindBlockCard({
@@ -295,6 +472,7 @@ class _MindBlockCard extends StatelessWidget {
     required this.icon,
     required this.color,
     required this.available,
+    required this.isLiberated,
     required this.onTap,
   });
 
@@ -303,52 +481,61 @@ class _MindBlockCard extends StatelessWidget {
     final small = MediaQuery.of(context).size.width < 450;
 
     return AnimatedContainer(
-      duration: Duration(milliseconds: 250),
+      duration: const Duration(milliseconds: 250),
       decoration: BoxDecoration(
-        color: Color(0xFF2B1E40),
+        color: isLiberated
+            ? const Color(0xFFFFF8DC).withOpacity(available ? 0.95 : 0.5)
+            : const Color(0xFF1A1A2E).withOpacity(available ? 0.95 : 0.5),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: color.withOpacity(available ? 0.8 : 0.2),
-          width: 1.8,
+          color: available ? color : Colors.grey.shade700,
+          width: 2.5,
         ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.7),
-            offset: Offset(8, 8),
-            blurRadius: 16,
-            spreadRadius: 1,
-          ),
-        ],
+        boxShadow: available
+            ? [
+                BoxShadow(
+                  color: color.withOpacity(0.3),
+                  blurRadius: 20,
+                  spreadRadius: 2,
+                ),
+              ]
+            : [],
       ),
       child: InkWell(
         borderRadius: BorderRadius.circular(20),
         onTap: available ? onTap : null,
         child: Padding(
-          padding: EdgeInsets.all(20),
+          padding: EdgeInsets.all(small ? 18 : 24),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(icon,
-                  size: small ? 45 : 55,
-                  color: available ? color : Colors.grey),
-              SizedBox(height: 16),
+              Icon(
+                icon,
+                size: small ? 55 : 70,
+                color: available ? color : Colors.grey,
+              ),
+              const SizedBox(height: 18),
               Text(
                 title,
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontFamily: 'PressStart2P',
-                  fontSize: small ? 11 : 13,
+                  fontSize: small ? 13 : 15,
                   color: available ? color : Colors.grey,
+                  letterSpacing: 1,
                 ),
               ),
-              SizedBox(height: 16),
+              const SizedBox(height: 14),
               Text(
                 description,
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontFamily: 'VT323',
-                  fontSize: small ? 22 : 24,
-                  color: available ? Colors.white : Colors.grey,
+                  fontSize: small ? 24 : 28,
+                  color: available
+                      ? (isLiberated ? Colors.black87 : Colors.white)
+                      : Colors.grey.shade600,
+                  height: 1.3,
                 ),
               ),
             ],
@@ -359,26 +546,83 @@ class _MindBlockCard extends StatelessWidget {
   }
 }
 
-/// -----------------------------------------------------------
-///   FONDO RETRO ANIMADO
-/// -----------------------------------------------------------
-class PurgatorioBackgroundPainter extends CustomPainter {
+// ✅ LLUVIA (PURGATORIO)
+class RainPainter extends CustomPainter {
   final double progress;
-  PurgatorioBackgroundPainter(this.progress);
+
+  RainPainter(this.progress);
 
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = Color(0xFF00FFF0).withOpacity(0.1)
-      ..strokeWidth = 1;
+      ..color = const Color(0xFF5A9FB8).withOpacity(0.15)
+      ..strokeWidth = 1.5
+      ..strokeCap = StrokeCap.round;
 
-    for (double y = 0; y < size.height; y += 30) {
-      canvas.drawLine(Offset(0, y), Offset(size.width, y), paint);
+    final random = math.Random(42);
+
+    for (int i = 0; i < 80; i++) {
+      final x = random.nextDouble() * size.width;
+      final baseY = random.nextDouble() * size.height;
+      final y = (baseY + progress * size.height * 1.5) % size.height;
+
+      final dropLength = 20 + random.nextDouble() * 30;
+
+      canvas.drawLine(
+        Offset(x, y),
+        Offset(x - 3, y + dropLength),
+        paint,
+      );
     }
+  }
 
-    for (double x = 0; x < size.width; x += 30) {
-      final o = math.sin(progress * 2 * math.pi + x / 50) * 4;
-      canvas.drawLine(Offset(x, o), Offset(x, size.height - o), paint);
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
+}
+
+// ✅ NUEVO: SOL + HOJAS CAYENDO (LIBERACIÓN)
+class LiberationPainter extends CustomPainter {
+  final double progress;
+
+  LiberationPainter(this.progress);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    // ✅ SOL RADIANTE
+    final sunGlow = Paint()
+      ..color = const Color(0xFFFFE082)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 50);
+
+    canvas.drawCircle(
+      Offset(size.width * 0.85, size.height * 0.15),
+      90,
+      sunGlow,
+    );
+
+    final sunCore = Paint()..color = const Color(0xFFFFD54F);
+    canvas.drawCircle(
+      Offset(size.width * 0.85, size.height * 0.15),
+      60,
+      sunCore,
+    );
+
+    // ✅ HOJAS CAYENDO
+    final random = math.Random(42);
+    for (int i = 0; i < 60; i++) {
+      final x = random.nextDouble() * size.width;
+      final y = (random.nextDouble() * size.height +
+              progress * 200 * (i % 2 == 0 ? 1 : -1)) %
+          size.height;
+
+      final leafColor = i % 3 == 0
+          ? const Color(0xFFD4A574)
+          : i % 2 == 0
+              ? const Color(0xFFE6C79C)
+              : const Color(0xFFFFF8DC);
+
+      final leafPaint = Paint()..color = leafColor.withOpacity(0.8);
+
+      canvas.drawCircle(Offset(x, y), i % 4 == 0 ? 6 : 4, leafPaint);
     }
   }
 

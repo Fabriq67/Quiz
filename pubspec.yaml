@@ -35,6 +35,8 @@ flutter:
     - assets/fonts/
     - assets/questions/
     - assets/powerups.json
+    - assets/image/Comodines.png
+    - assets/image/Codice.png
 
   fonts:
     - family: VT323

@@ -26,23 +26,23 @@ class _ComodinesScreenState extends State<ComodinesScreen> {
     final progress = await ProgressManager.loadProgress();
 
     setState(() {
+      // ✅ ORDENAR POR PRECIO (ya viene ordenado de PowerUpsService)
       allPowerUps = jsonList;
-      unlockedIds = progress.unlockedPowerUps; // ["clarividencia", ...]
+      unlockedIds = progress.unlockedPowerUps;
     });
 
-    // cargar selección previa
     final selectedList = await ProgressManager.loadSelectedPowerUps();
     setState(() => selected = selectedList);
   }
 
   void toggle(PowerUp p) {
-    if (!unlockedIds.contains(p.id)) return; // bloqueado → no tocar
+    if (!unlockedIds.contains(p.id)) return;
 
     setState(() {
       if (selected.contains(p)) {
         selected.remove(p);
       } else {
-        selected = [p]; // solo 1 comodín equipado
+        selected = [p];
       }
     });
   }
@@ -68,8 +68,8 @@ class _ComodinesScreenState extends State<ComodinesScreen> {
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [
-          for (final p in allPowerUps)
-            _buildPowerUpCard(p),
+          // ✅ MOSTRAR EN ORDEN (ya está ordenado desde PowerUpsService)
+          for (final p in allPowerUps) _buildPowerUpCard(p),
 
           const SizedBox(height: 30),
 
@@ -84,7 +84,7 @@ class _ComodinesScreenState extends State<ComodinesScreen> {
               "GUARDAR SELECCIÓN",
               style: TextStyle(fontFamily: "PressStart2P", fontSize: 12),
             ),
-          )
+          ),
         ],
       ),
     );
@@ -95,7 +95,7 @@ class _ComodinesScreenState extends State<ComodinesScreen> {
     final bool isSelected = selected.contains(p);
 
     return Opacity(
-      opacity: isUnlocked ? 1 : 0.3, // bloqueados casi grises
+      opacity: isUnlocked ? 1 : 0.3,
       child: GestureDetector(
         onTap: () {
           if (isUnlocked) toggle(p);
@@ -113,30 +113,53 @@ class _ComodinesScreenState extends State<ComodinesScreen> {
           ),
           child: Row(
             children: [
-              Icon(
-                isUnlocked ? p.icon : Icons.lock,
-                color: isUnlocked ? p.color : Colors.white38,
-                size: 40,
-              ),
+              isUnlocked
+                  ? (p.icon is IconData
+                      ? Icon(
+                          p.icon as IconData,
+                          size: 40,
+                          color: p.color,
+                        )
+                      : Text(
+                          p.icon.toString(),
+                          style: TextStyle(
+                            fontSize: 40,
+                            color: p.color,
+                          ),
+                        ))
+                  : const Icon(
+                      Icons.lock,
+                      size: 40,
+                      color: Colors.white38,
+                    ),
+
               const SizedBox(width: 16),
+
               Expanded(
-                child: Text(
-                  p.name,
-                  style: TextStyle(
-                    fontFamily: "PressStart2P",
-                    fontSize: 11,
-                    color: isUnlocked ? p.color : Colors.white38,
-                  ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      p.name,
+                      style: TextStyle(
+                        fontFamily: "PressStart2P",
+                        fontSize: 11,
+                        color: isUnlocked ? p.color : Colors.white38,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+
+                    Text(
+                      p.effect,
+                      style: const TextStyle(
+                        fontFamily: "VT323",
+                        fontSize: 20,
+                        color: Colors.white70,
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              Text(
-                "${p.price}",
-                style: TextStyle(
-                  color: isUnlocked ? p.color : Colors.white38,
-                  fontFamily: "PressStart2P",
-                  fontSize: 12,
-                ),
-              )
             ],
           ),
         ),

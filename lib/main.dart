@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:math' as math;
 import 'select_level_screen.dart';
+import 'instructions_screen.dart';
 
 void main() {
   runApp(const QuizMenteApp());
@@ -54,99 +55,7 @@ class _HomeScreenState extends State<HomeScreen>
       vsync: this,
       duration: const Duration(seconds: 6),
     )..repeat();
-
-    // Mostrar aviso 0.5 segundos después de cargar
-    Future.delayed(const Duration(milliseconds: 500), () {
-      _showUpdateNotice();
-    });
-  }
-
-  /// ---------- AVISO EMERGENTE ----------
-  void _showUpdateNotice() {
-    showDialog(
-      context: context,
-      barrierDismissible: true,
-      builder: (context) {
-        return Center(
-          child: Container(
-            width: 330,
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: const Color(0xFF2B1E40),
-              borderRadius: BorderRadius.circular(18),
-              border: Border.all(color: const Color(0xFF00FFF0), width: 3),
-              boxShadow: [
-                BoxShadow(
-                  color: const Color(0xFF00FFF0).withOpacity(0.4),
-                  blurRadius: 18,
-                ),
-              ],
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  "AVISO",
-                  style: TextStyle(
-                    fontFamily: "PressStart2P",
-                    color: const Color(0xFFFF4B82),
-                    fontSize: 14,
-                    shadows: [
-                      Shadow(
-                        color: const Color(0xFF00FFF0).withOpacity(0.7),
-                        blurRadius: 8,
-                      )
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 20),
-
-                const Text(
-                  "Esta versión entrega la funcionalidad completa del quiz en PERCEPCIÓN, "
-                  "la lógica de bloques y la navegación del Purgatorio Mental.\n\n"
-                  "Las monedas, jefes, comodines y el resto de niveles serán añadidos "
-                  "en las siguientes actualizaciones antes de la entrega final.",
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontFamily: 'VT323',
-                    fontSize: 20,
-                    height: 1.3,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-
-                const SizedBox(height: 25),
-
-                GestureDetector(
-                  onTap: () => Navigator.pop(context),
-                  child: Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 30, vertical: 12),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFFF4B82),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(
-                        color: const Color(0xFF00FFF0),
-                        width: 2,
-                      ),
-                    ),
-                    child: const Text(
-                      "CERRAR",
-                      style: TextStyle(
-                        fontFamily: "PressStart2P",
-                        color: Colors.white,
-                        fontSize: 12,
-                        letterSpacing: 2,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
+    // Aviso emergente eliminado
   }
 
   @override
@@ -208,39 +117,10 @@ class _HomeScreenState extends State<HomeScreen>
                 PixelButton(
                   text: 'INSTRUCCIONES',
                   onTap: () {
-                    showDialog(
-                      context: context,
-                      builder: (context) => AlertDialog(
-                        backgroundColor: const Color(0xFF2B1E40),
-                        title: const Text(
-                          'INSTRUCCIONES',
-                          style: TextStyle(
-                            fontFamily: 'VT323',
-                            color: Colors.white,
-                            fontSize: 24,
-                          ),
-                        ),
-                        content: const Text(
-                          'Responde correctamente las preguntas, avanza entre los mundos mentales y derrota a los jefes intelectuales. ¡Demuestra tu poder cognitivo!',
-                          style: TextStyle(
-                            color: Colors.white70,
-                            fontFamily: 'VT323',
-                            fontSize: 20,
-                          ),
-                        ),
-                        actions: [
-                          TextButton(
-                            onPressed: () => Navigator.pop(context),
-                            child: const Text(
-                              'Cerrar',
-                              style: TextStyle(
-                                color: Color(0xFF00FFF0),
-                                fontFamily: 'VT323',
-                                fontSize: 20,
-                              ),
-                            ),
-                          )
-                        ],
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const InstructionsScreen(),
                       ),
                     );
                   },

@@ -2,46 +2,60 @@ import 'package:flutter/material.dart';
 import 'dart:math' as math;
 
 import '../data/progress_manager.dart';
+// ...existing code...
+
+import '../comodines_screen.dart'; // ✅ CAMBIAR: /comodines_screen.dart por ../comodines_screen.dart
 import '../hud_widget.dart';
-import '../comodines_screen.dart';
-import 'percepcion_quiz_screen.dart';
-import '../jefes_screen.dart';
-import '../purgatorio_screen.dart'; // ✅ AGREGAR ESTA LÍNEA
+import '../jefes_screen.dart'; 
+import '../purgatorio_screen.dart'; // ✅ CAMBIAR: /purgatorio_screen.dart por ../purgatorio_screen.dart
+import 'logica_quiz_screen.dart';
 
 // ...existing code...
 
-class PercepcionMenuScreen extends StatefulWidget {
-  const PercepcionMenuScreen({super.key});
+class LogicaMenuScreen extends StatefulWidget {
+  const LogicaMenuScreen({super.key});
 
   @override
-  State<PercepcionMenuScreen> createState() => _PercepcionMenuScreenState();
+  State<LogicaMenuScreen> createState() => _LogicaMenuScreenState();
 }
 
-class _PercepcionMenuScreenState extends State<PercepcionMenuScreen>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _fogController;
+class _LogicaMenuScreenState extends State<LogicaMenuScreen>
+    with TickerProviderStateMixin {
+  late AnimationController _gridController;
+  late AnimationController _particleController;
 
   int coins = 0;
 
-  Map<int, bool> unlocked = {1: true, 2: false};
-  Map<int, bool> completed = {1: false, 2: false};
+  Map<int, bool> unlocked = {1: true, 2: false, 3: false};
+  Map<int, bool> completed = {1: false, 2: false, 3: false};
 
   final List<Map<String, dynamic>> blocks = [
     {
       "id": 1,
       "title": "Bloque 1",
+      "difficulty": "Fácil",
       "questions": 5,
       "isBoss": false,
-      "color": const Color(0xFF6BE3FF),
+      "color": Color(0xFF5A9FD4),
       "bossName": null,
     },
     {
       "id": 2,
-      "title": "Bloque Jefe",
+      "title": "Bloque 2",
+      "difficulty": "Medio",
+      "questions": 5,
+      "isBoss": false,
+      "color": Color(0xFF7FA8C9),
+      "bossName": null,
+    },
+    {
+      "id": 3,
+      "title": "Bloque 3 (Jefe)",
+      "difficulty": "Difícil",
       "questions": 10,
       "isBoss": true,
-      "color": const Color(0xFFFF5C5C),
-      "bossName": "La sombra del ojo",
+      "color": Color(0xFFD47A7A),
+      "bossName": "El Rompecódigos",
     },
   ];
 
@@ -49,26 +63,18 @@ class _PercepcionMenuScreenState extends State<PercepcionMenuScreen>
   void initState() {
     super.initState();
 
-    _fogController =
-        AnimationController(vsync: this, duration: const Duration(seconds: 18))
-          ..repeat();
+    _gridController = AnimationController(
+      vsync: this,
+      duration: Duration(seconds: 8),
+    )..repeat();
+
+    _particleController = AnimationController(
+      vsync: this,
+      duration: Duration(seconds: 12),
+    )..repeat();
 
     _loadCoins();
     _loadUnlocks();
-  }
-
-  Future<void> _loadUnlocks() async {
-    final u1 = await ProgressManager.isBlockUnlocked(1);
-    final u2 = await ProgressManager.isBlockUnlocked(2);
-    final c1 = await ProgressManager.isBlockCompleted(1);
-    final c2 = await ProgressManager.isBlockCompleted(2);
-
-    setState(() {
-      unlocked[1] = u1;
-      unlocked[2] = u2;
-      completed[1] = c1;
-      completed[2] = c2;
-    });
   }
 
   Future<void> _loadCoins() async {
@@ -76,14 +82,30 @@ class _PercepcionMenuScreenState extends State<PercepcionMenuScreen>
     setState(() => coins = progress.coins);
   }
 
-  void _refreshCoins() async {
-    final progress = await ProgressManager.loadProgress();
-    setState(() => coins = progress.coins);
+  Future<void> _loadUnlocks() async {
+    final u1 = await ProgressManager.isLogicBlockUnlocked(1);
+    final u2 = await ProgressManager.isLogicBlockUnlocked(2);
+    final u3 = await ProgressManager.isLogicBlockUnlocked(3);
+
+    final c1 = await ProgressManager.isLogicBlockCompleted(1);
+    final c2 = await ProgressManager.isLogicBlockCompleted(2);
+    final c3 = await ProgressManager.isLogicBlockCompleted(3);
+
+    setState(() {
+      unlocked[1] = u1;
+      unlocked[2] = u2;
+      unlocked[3] = u3;
+
+      completed[1] = c1;
+      completed[2] = c2;
+      completed[3] = c3;
+    });
   }
 
   @override
   void dispose() {
-    _fogController.dispose();
+    _gridController.dispose();
+    _particleController.dispose();
     super.dispose();
   }
 
@@ -93,14 +115,23 @@ class _PercepcionMenuScreenState extends State<PercepcionMenuScreen>
     final isSmall = size.width < 500;
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0B0F14),
+      backgroundColor: const Color(0xFF0A0E1A),
       body: Stack(
         children: [
-          // Niebla animada mejorada
+          // FONDO GRID FUTURISTA
           AnimatedBuilder(
-            animation: _fogController,
+            animation: _gridController,
             builder: (context, _) => CustomPaint(
-              painter: _FogPainter(_fogController.value),
+              painter: _FuturisticGridPainter(_gridController.value),
+              size: size,
+            ),
+          ),
+
+          // PARTÍCULAS FLOTANTES
+          AnimatedBuilder(
+            animation: _particleController,
+            builder: (context, _) => CustomPaint(
+              painter: _ParticlePainter(_particleController.value),
               size: size,
             ),
           ),
@@ -109,6 +140,8 @@ class _PercepcionMenuScreenState extends State<PercepcionMenuScreen>
             child: Column(
               children: [
                 const SizedBox(height: 10),
+
+                // HUD
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: GameHUD(
@@ -117,35 +150,36 @@ class _PercepcionMenuScreenState extends State<PercepcionMenuScreen>
                       context,
                       MaterialPageRoute(
                           builder: (_) => const ComodinesScreen()),
-                    ).then((_) => _refreshCoins()),
+                    ).then((_) => _loadCoins()),
                     onOpenJefes: () => Navigator.push(
                       context,
-                     MaterialPageRoute(builder: (_) => const JefesScreen()), // ✅ NO CodiceScreen()
+                      MaterialPageRoute(builder: (_) => const JefesScreen()),
                     ),
                   ),
                 ),
 
-                const SizedBox(height: 28),
+                const SizedBox(height: 24),
 
-                // Título más grande y visible
+                // TÍTULO
                 Text(
-                  "PERCEPCIÓN",
+                  "LÓGICA",
                   style: TextStyle(
                     fontFamily: 'PressStart2P',
-                    color: const Color(0xFF6BE3FF),
+                    color: const Color(0xFF5A9FD4),
                     fontSize: isSmall ? 18 : 22,
                     letterSpacing: 3,
                     shadows: const [
                       Shadow(
-                        blurRadius: 18,
-                        color: Color(0xFF6BE3FF),
+                        blurRadius: 15,
+                        color: Color(0xFF5A9FD4),
                       ),
                     ],
                   ),
                 ),
 
-                const SizedBox(height: 35),
+                const SizedBox(height: 30),
 
+                // GRID DE BLOQUES
                 Expanded(
                   child: GridView.builder(
                     padding: EdgeInsets.symmetric(
@@ -161,19 +195,20 @@ class _PercepcionMenuScreenState extends State<PercepcionMenuScreen>
                     itemCount: blocks.length,
                     itemBuilder: (context, index) {
                       final block = blocks[index];
-                      final int id = block["id"];
+                      final id = block["id"] as int;
 
                       final bool isUnlocked = unlocked[id] ?? false;
                       final bool isCompleted = completed[id] ?? false;
 
-                      return _SilentBlockCard(
+                      return _FuturisticBlockCard(
                         title: block["title"],
+                        difficulty: block["difficulty"],
                         questions: block["questions"],
                         isBoss: block["isBoss"],
                         color: block["color"],
+                        bossName: block["bossName"],
                         isUnlocked: isUnlocked,
                         isCompleted: isCompleted,
-                        bossName: block["bossName"],
                         onTap: () {
                           if (!isUnlocked) {
                             ScaffoldMessenger.of(context).showSnackBar(
@@ -211,8 +246,8 @@ class _PercepcionMenuScreenState extends State<PercepcionMenuScreen>
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (_) => PercepcionQuizScreen(
-                                blockId: block["id"],
+                              builder: (_) => LogicaQuizScreen(
+                                blockId: id,
                                 totalQuestions: block["questions"],
                                 isBoss: block["isBoss"],
                               ),
@@ -232,7 +267,7 @@ class _PercepcionMenuScreenState extends State<PercepcionMenuScreen>
             ),
           ),
 
-          // Botón de regreso mejorado
+          // BOTÓN DE REGRESO FUTURISTA
           Positioned(
             left: 20,
             bottom: 20,
@@ -249,15 +284,15 @@ class _PercepcionMenuScreenState extends State<PercepcionMenuScreen>
                   vertical: 16,
                 ),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF1A1A2E),
+                  color: const Color(0xFF0A0E1A),
                   borderRadius: BorderRadius.circular(14),
                   border: Border.all(
-                    color: const Color(0xFF6BE3FF),
+                    color: const Color(0xFF5A9FD4),
                     width: 2.5,
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0xFF6BE3FF).withOpacity(0.4),
+                      color: const Color(0xFF5A9FD4).withOpacity(0.4),
                       blurRadius: 16,
                       spreadRadius: 2,
                     ),
@@ -268,7 +303,7 @@ class _PercepcionMenuScreenState extends State<PercepcionMenuScreen>
                   children: const [
                     Icon(
                       Icons.arrow_back_rounded,
-                      color: Color(0xFF6BE3FF),
+                      color: Color(0xFF5A9FD4),
                       size: 28,
                     ),
                     SizedBox(width: 12),
@@ -277,7 +312,7 @@ class _PercepcionMenuScreenState extends State<PercepcionMenuScreen>
                       style: TextStyle(
                         fontFamily: 'PressStart2P',
                         fontSize: 13,
-                        color: Color(0xFF6BE3FF),
+                        color: Color(0xFF5A9FD4),
                         letterSpacing: 1.5,
                       ),
                     ),
@@ -293,20 +328,22 @@ class _PercepcionMenuScreenState extends State<PercepcionMenuScreen>
 }
 
 // ----------------------------------------------------------
-// TARJETA DE BLOQUE MEJORADA
+// TARJETA DE BLOQUE FUTURISTA
 // ----------------------------------------------------------
-class _SilentBlockCard extends StatefulWidget {
+class _FuturisticBlockCard extends StatefulWidget {
   final String title;
+  final String difficulty;
   final int questions;
   final bool isBoss;
   final Color color;
+  final String? bossName;
   final bool isUnlocked;
   final bool isCompleted;
-  final String? bossName;
   final VoidCallback onTap;
 
-  const _SilentBlockCard({
+  const _FuturisticBlockCard({
     required this.title,
+    required this.difficulty,
     required this.questions,
     required this.isBoss,
     required this.color,
@@ -317,10 +354,10 @@ class _SilentBlockCard extends StatefulWidget {
   });
 
   @override
-  State<_SilentBlockCard> createState() => _SilentBlockCardState();
+  State<_FuturisticBlockCard> createState() => _FuturisticBlockCardState();
 }
 
-class _SilentBlockCardState extends State<_SilentBlockCard>
+class _FuturisticBlockCardState extends State<_FuturisticBlockCard>
     with SingleTickerProviderStateMixin {
   late AnimationController _pulseController;
 
@@ -365,7 +402,7 @@ class _SilentBlockCardState extends State<_SilentBlockCard>
             duration: const Duration(milliseconds: 300),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(24),
-              color: const Color(0xFF1A1A2E).withOpacity(
+              color: const Color(0xFF0F1420).withOpacity(
                 widget.isUnlocked ? 0.9 : 0.5,
               ),
               border: Border.all(
@@ -387,7 +424,7 @@ class _SilentBlockCardState extends State<_SilentBlockCard>
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Icon(
-                    widget.isBoss ? Icons.flash_on : Icons.remove_red_eye,
+                    widget.isBoss ? Icons.extension : Icons.settings,
                     color: displayColor,
                     size: isSmall ? 55 : 65,
                   ),
@@ -402,6 +439,15 @@ class _SilentBlockCardState extends State<_SilentBlockCard>
                       letterSpacing: 1.5,
                     ),
                   ),
+                  const SizedBox(height: 8),
+                  Text(
+                    widget.difficulty,
+                    style: TextStyle(
+                      fontFamily: 'VT323',
+                      color: Colors.white70,
+                      fontSize: isSmall ? 22 : 26,
+                    ),
+                  ),
                   if (widget.bossName != null)
                     Padding(
                       padding: const EdgeInsets.only(top: 10),
@@ -410,8 +456,8 @@ class _SilentBlockCardState extends State<_SilentBlockCard>
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           fontFamily: 'VT323',
-                          color: Colors.white70,
-                          fontSize: isSmall ? 22 : 26,
+                          color: Colors.redAccent.shade100,
+                          fontSize: isSmall ? 20 : 24,
                         ),
                       ),
                     ),
@@ -454,28 +500,66 @@ class _SilentBlockCardState extends State<_SilentBlockCard>
 }
 
 // ----------------------------------------------------------
-// PINTOR DE NIEBLA MEJORADO
+// PINTOR DE GRID FUTURISTA
 // ----------------------------------------------------------
-class _FogPainter extends CustomPainter {
+class _FuturisticGridPainter extends CustomPainter {
   final double progress;
-  _FogPainter(this.progress);
+  _FuturisticGridPainter(this.progress);
 
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = Colors.white.withOpacity(0.05)
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 50);
+      ..color = const Color(0xFF5A9FD4).withOpacity(0.08)
+      ..strokeWidth = 1.5;
 
-    for (int i = 0; i < 8; i++) {
-      final dx = math.sin(progress * 2 * math.pi + i * 0.7) * 180;
-      final dy = size.height * i / 8;
-      final rect = Rect.fromLTWH(
-        dx,
-        dy,
-        size.width * 1.6,
-        140,
+    // Líneas horizontales
+    for (double y = 0; y < size.height; y += 35) {
+      final offset = math.sin(progress * 2 * math.pi + y / 50) * 8;
+      canvas.drawLine(
+        Offset(offset, y),
+        Offset(size.width + offset, y),
+        paint,
       );
-      canvas.drawOval(rect, paint);
+    }
+
+    // Líneas verticales
+    for (double x = 0; x < size.width; x += 35) {
+      final offset = math.cos(progress * 2 * math.pi + x / 50) * 8;
+      canvas.drawLine(
+        Offset(x, offset),
+        Offset(x, size.height + offset),
+        paint,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
+}
+
+// ----------------------------------------------------------
+// PINTOR DE PARTÍCULAS
+// ----------------------------------------------------------
+class _ParticlePainter extends CustomPainter {
+  final double progress;
+  _ParticlePainter(this.progress);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = const Color(0xFF5A9FD4).withOpacity(0.4)
+      ..style = PaintingStyle.fill;
+
+    final random = math.Random(42);
+
+    for (int i = 0; i < 30; i++) {
+      final baseX = random.nextDouble() * size.width;
+      final baseY = random.nextDouble() * size.height;
+
+      final x = baseX + math.sin(progress * 2 * math.pi + i) * 20;
+      final y = (baseY + progress * size.height * 0.5) % size.height;
+
+      canvas.drawCircle(Offset(x, y), 2, paint);
     }
   }
 

@@ -1,0 +1,504 @@
+[
+  {
+    "id": "LOG-01",
+    "pregunta": "Si mañana es jueves, ¿qué día fue ayer?",
+    "opciones": ["Lunes", "Martes", "Miércoles", "Viernes"],
+    "respuesta_correcta": "Martes",
+    "dificultad": "facil",
+    "explicacion": "Si mañana es jueves, hoy es miércoles y ayer fue martes."
+  },
+  {
+    "id": "LOG-03",
+    "pregunta": "Si 12 es el doble de X, ¿cuánto vale X?",
+    "opciones": ["4", "6", "8", "10"],
+    "respuesta_correcta": "6",
+    "dificultad": "facil",
+    "explicacion": "12/2 = 6."
+  },
+  {
+    "id": "LOG-05",
+    "pregunta": "Completa la serie: 1, 4, 9, 16, 25, …",
+    "opciones": ["30", "35", "36", "49"],
+    "respuesta_correcta": "36",
+    "dificultad": "facil",
+    "explicacion": "Son cuadrados perfectos."
+  },
+  {
+    "id": "LOG-07",
+    "pregunta": "Si A=1, B=2, C=3, ¿cuánto vale B+C?",
+    "opciones": ["3", "4", "5", "6"],
+    "respuesta_correcta": "5",
+    "dificultad": "facil",
+    "explicacion": "2+3=5."
+  },
+  {
+    "id": "LOG-09",
+    "pregunta": "Si 4×X = 28, ¿cuánto vale X?",
+    "opciones": ["5", "6", "7", "8"],
+    "respuesta_correcta": "7",
+    "dificultad": "facil",
+    "explicacion": "28/4=7."
+  },
+  {
+    "id": "LOG-11",
+    "pregunta": "Si 3^3 = 27, ¿cuánto vale 3^2?",
+    "opciones": ["6", "9", "12", "18"],
+    "respuesta_correcta": "9",
+    "dificultad": "facil",
+    "explicacion": "3×3=9."
+  },
+  {
+    "id": "LOG-14",
+    "pregunta": "Completa la serie: 9, 18, 36, 72, …",
+    "opciones": ["100", "120", "130", "144"],
+    "respuesta_correcta": "144",
+    "dificultad": "facil",
+    "explicacion": "Se multiplica ×2."
+  },
+  {
+    "id": "LOG-16",
+    "pregunta": "¿Qué número sigue? 14, 28, 56, …",
+    "opciones": ["64", "70", "84", "112"],
+    "respuesta_correcta": "112",
+    "dificultad": "facil",
+    "explicacion": "×2 cada vez."
+  },
+  {
+    "id": "LOG-17",
+    "pregunta": "Elige el opuesto de la palabra 'ganar'.",
+    "opciones": ["Perder", "Ganar", "Pelear", "Lograr"],
+    "respuesta_correcta": "Perder",
+    "dificultad": "facil",
+    "explicacion": "Antónimo directo."
+  },
+  {
+    "id": "LOG-20",
+    "pregunta": "¿Cuál suceso es imposible?",
+    "opciones": ["Lanzar una moneda y salga cara", "Sacar un número par del 2 al 10", "Sacar un número primo del 1 al 3", "Sacar un 7 en un dado común"],
+    "respuesta_correcta": "Sacar un 7 en un dado común",
+    "dificultad": "facil",
+    "explicacion": "Un dado solo tiene 1-6."
+  },
+  {
+    "id": "LOG-24",
+    "pregunta": "¿Cuál palabra no encaja? Mesa, Silla, Ventana, Perro",
+    "opciones": ["Mesa", "Silla", "Ventana", "Perro"],
+    "respuesta_correcta": "Perro",
+    "dificultad": "facil",
+    "explicacion": "Los otros son objetos del hogar."
+  },
+  {
+    "id": "LOG-25",
+    "pregunta": "Si 7×7 = 49, ¿cuánto vale 7×8?",
+    "opciones": ["54", "56", "58", "60"],
+    "respuesta_correcta": "56",
+    "dificultad": "facil",
+    "explicacion": "Multiplicación directa."
+  },
+  {
+    "id": "LOG-29",
+    "pregunta": "Un ángulo recto mide:",
+    "opciones": ["30°", "45°", "90°", "180°"],
+    "respuesta_correcta": "90°",
+    "dificultad": "facil",
+    "explicacion": "Definición."
+  },
+  {
+    "id": "LOG-30",
+    "pregunta": "Si una figura tiene 5 lados, ¿cómo se llama?",
+    "opciones": ["Hexágono", "Pentágono", "Heptágono", "Trapecio"],
+    "respuesta_correcta": "Pentágono",
+    "dificultad": "facil",
+    "explicacion": "Penta = 5."
+  },
+  {
+    "id": "LOG-32",
+    "pregunta": "Si 100% de X es 80, ¿cuánto es 50% de X?",
+    "opciones": ["20", "30", "40", "50"],
+    "respuesta_correcta": "40",
+    "dificultad": "facil",
+    "explicacion": "50% es la mitad."
+  },
+  {
+    "id": "LOG-34",
+    "pregunta": "¿Cuál número es par?",
+    "opciones": ["13", "21", "28", "33"],
+    "respuesta_correcta": "28",
+    "dificultad": "facil",
+    "explicacion": "Solo termina en cifra par."
+  },
+  {
+    "id": "LOG-35",
+    "pregunta": "Si X – 7 = 21, X vale:",
+    "opciones": ["21", "25", "27", "28"],
+    "respuesta_correcta": "28",
+    "dificultad": "facil",
+    "explicacion": "Se suma 7."
+  },
+  {
+    "id": "LOG-37",
+    "pregunta": "Si un número multiplicado por 0 es:",
+    "opciones": ["0", "1", "El mismo número", "Infinito"],
+    "respuesta_correcta": "0",
+    "dificultad": "facil",
+    "explicacion": "Propiedad multiplicativa."
+  },
+  {
+    "id": "LOG-40",
+    "pregunta": "Si un tren viaja 200 km a 100 km/h, tarda:",
+    "opciones": ["1 h", "2 h", "3 h", "4 h"],
+    "respuesta_correcta": "2 h",
+    "dificultad": "facil",
+    "explicacion": "Tiempo = distancia/velocidad."
+  },
+  {
+    "id": "LOG-43",
+    "pregunta": "¿Qué figura tiene más lados?",
+    "opciones": ["Cuadrado", "Pentágono", "Triángulo", "Hexágono"],
+    "respuesta_correcta": "Hexágono",
+    "dificultad": "facil",
+    "explicacion": "Tiene 6 lados."
+  },
+  {
+    "id": "LOG-44",
+    "pregunta": "Si Z es la última letra del alfabeto, ¿qué letra viene antes?",
+    "opciones": ["Y", "X", "W", "V"],
+    "respuesta_correcta": "Y",
+    "dificultad": "facil",
+    "explicacion": "Y precede a Z."
+  },
+  {
+    "id": "LOG-47",
+    "pregunta": "¿Cuál es el opuesto de 'norte'?",
+    "opciones": ["Sur", "Oeste", "Este", "Centro"],
+    "respuesta_correcta": "Sur",
+    "dificultad": "facil",
+    "explicacion": "Dirección opuesta."
+  },
+
+
+
+  {
+    "id": "LOG-02",
+    "pregunta": "¿Cuál número completa la serie? 5, 10, 20, 40, …",
+    "opciones": ["45", "60", "70", "80"],
+    "respuesta_correcta": "80",
+    "dificultad": "media",
+    "explicacion": "Cada término se duplica."
+  },
+  {
+    "id": "LOG-04",
+    "pregunta": "Si todos los gatos son animales y algunos animales son blancos, ¿qué conclusión es válida?",
+    "opciones": ["Todos los gatos son blancos", "Algunos gatos pueden ser blancos", "Ningún gato es blanco", "Todos los animales son gatos"],
+    "respuesta_correcta": "Algunos gatos pueden ser blancos",
+    "dificultad": "media",
+    "explicacion": "Existe posibilidad pero no certeza."
+  },
+  {
+    "id": "LOG-06",
+    "pregunta": "Un reloj marca las 6:00. ¿Qué ángulo hay entre las manecillas?",
+    "opciones": ["90°", "120°", "180°", "240°"],
+    "respuesta_correcta": "180°",
+    "dificultad": "media",
+    "explicacion": "Las manecillas están opuestas."
+  },
+  {
+    "id": "LOG-08",
+    "pregunta": "Si hoy es sábado, ¿qué día será dentro de 50 días?",
+    "opciones": ["Domingo", "Lunes", "Martes", "Jueves"],
+    "respuesta_correcta": "Lunes",
+    "dificultad": "media",
+    "explicacion": "50 % 7 = 1 → sábado + 1 día = domingo, error típico; pero contando correctamente: sábado + 50 = lunes."
+  },
+  {
+    "id": "LOG-12",
+    "pregunta": "¿Qué palabra no pertenece al grupo? León, Tigre, Pantera, Camello",
+    "opciones": ["León", "Tigre", "Pantera", "Camello"],
+    "respuesta_correcta": "Camello",
+    "dificultad": "media",
+    "explicacion": "Es el único que no es felino."
+  },
+  {
+    "id": "LOG-13",
+    "pregunta": "Si un número disminuye 50% y luego aumenta 50%, el resultado final es:",
+    "opciones": ["El mismo número", "Mayor", "Menor", "Cero"],
+    "respuesta_correcta": "Menor",
+    "dificultad": "media",
+    "explicacion": "No son operaciones inversas exactas."
+  },
+  {
+    "id": "LOG-15",
+    "pregunta": "Si 8 personas comen 8 pizzas en 8 minutos, ¿cuántas comen 4 personas en 8 minutos?",
+    "opciones": ["2", "4", "6", "8"],
+    "respuesta_correcta": "4",
+    "dificultad": "media",
+    "explicacion": "Cada persona come 1 pizza en 8 minutos."
+  },
+  {
+    "id": "LOG-18",
+    "pregunta": "Si hoy es lunes, ¿qué día será dentro de 365 días?",
+    "opciones": ["Lunes", "Martes", "Sábado", "Domingo"],
+    "respuesta_correcta": "Martes",
+    "dificultad": "media",
+    "explicacion": "365 % 7 = 1."
+  },
+  {
+    "id": "LOG-19",
+    "pregunta": "Si 50 es 25% de X, ¿cuánto vale X?",
+    "opciones": ["100", "150", "200", "250"],
+    "respuesta_correcta": "200",
+    "dificultad": "media",
+    "explicacion": "50 = 0.25X."
+  },
+  {
+    "id": "LOG-21",
+    "pregunta": "Si un triángulo tiene ángulos de 30° y 60°, ¿cuánto mide el tercero?",
+    "opciones": ["60°", "90°", "100°", "120°"],
+    "respuesta_correcta": "90°",
+    "dificultad": "media",
+    "explicacion": "Todos suman 180°."
+  },
+  {
+    "id": "LOG-23",
+    "pregunta": "Si 0.5X = 20, ¿cuánto vale X?",
+    "opciones": ["10", "20", "30", "40"],
+    "respuesta_correcta": "40",
+    "dificultad": "media",
+    "explicacion": "Divide entre 0.5."
+  },
+  {
+    "id": "LOG-26",
+    "pregunta": "¿Cuál número completa la serie? 11, 22, 33, 44, …",
+    "opciones": ["50", "55", "66", "77"],
+    "respuesta_correcta": "55",
+    "dificultad": "media",
+    "explicacion": "Se suma 11."
+  },
+  {
+    "id": "LOG-27",
+    "pregunta": "Si un número elevado al cuadrado es 121, ¿cuál es el número?",
+    "opciones": ["9", "10", "11", "12"],
+    "respuesta_correcta": "11",
+    "dificultad": "media",
+    "explicacion": "11×11=121."
+  },
+  {
+    "id": "LOG-31",
+    "pregunta": "¿Qué número falta? 80, 40, 20, 10, …",
+    "opciones": ["5", "6", "7", "8"],
+    "respuesta_correcta": "5",
+    "dificultad": "media",
+    "explicacion": "Dividir entre 2."
+  },
+  {
+    "id": "LOG-33",
+    "pregunta": "Si tres personas tardan 3 horas en pintar una pared, ¿cuánto tardaría una sola?",
+    "opciones": ["3 horas", "9 horas", "6 horas", "1 hora"],
+    "respuesta_correcta": "9 horas",
+    "dificultad": "media",
+    "explicacion": "El trabajo se divide entre personas."
+  },
+  {
+    "id": "LOG-36",
+    "pregunta": "¿Cuál número no pertenece? 12, 18, 24, 36, 50",
+    "opciones": ["12", "24", "36", "50"],
+    "respuesta_correcta": "50",
+    "dificultad": "media",
+    "explicacion": "Todos son múltiplos de 6 excepto 50."
+  },
+  {
+    "id": "LOG-38",
+    "pregunta": "Si 81 = 3^4, ¿cuánto es 3^3?",
+    "opciones": ["9", "18", "27", "36"],
+    "respuesta_correcta": "27",
+    "dificultad": "media",
+    "explicacion": "3×3×3."
+  },
+  {
+    "id": "LOG-42",
+    "pregunta": "Si el 40% de X es 20, X vale:",
+    "opciones": ["30", "40", "50", "60"],
+    "respuesta_correcta": "50",
+    "dificultad": "media",
+    "explicacion": "20/0.4=50."
+  },
+  {
+    "id": "LOG-46",
+    "pregunta": "Si 2x + 10 = 30, x vale:",
+    "opciones": ["5", "8", "10", "20"],
+    "respuesta_correcta": "10",
+    "dificultad": "media",
+    "explicacion": "2x=20."
+  },
+  {
+    "id": "LOG-48",
+    "pregunta": "Si duplicas un número y luego le restas 4 obtienes 20, ¿cuál era el número?",
+    "opciones": ["8", "10", "12", "14"],
+    "respuesta_correcta": "12",
+    "dificultad": "media",
+    "explicacion": "2x - 4 = 20."
+  },
+
+
+  {
+    "id": "LOG-10",
+    "pregunta": "¿Qué número falta? 100, 90, 72, 54, …",
+    "opciones": ["45", "40", "38", "36"],
+    "respuesta_correcta": "36",
+    "dificultad": "dificil",
+    "explicacion": "Restas crecientes."
+  },
+  {
+    "id": "LOG-18",
+    "pregunta": "Si hoy es lunes, ¿qué día será dentro de 365 días?",
+    "opciones": ["Lunes", "Martes", "Sábado", "Domingo"],
+    "respuesta_correcta": "Martes",
+    "dificultad": "dificil",
+    "explicacion": "365 % 7 = 1."
+  },
+  {
+    "id": "LOG-22",
+    "pregunta": "¿Cuál número falta? 3, 8, 15, 24, …",
+    "opciones": ["30", "33", "35", "40"],
+    "respuesta_correcta": "35",
+    "dificultad": "dificil",
+    "explicacion": "Suma +5, +7, +9…"
+  },
+  {
+    "id": "LOG-28",
+    "pregunta": "¿Qué número sigue? 4, 5, 7, 10, 14,…",
+    "opciones": ["17", "18", "19", "20"],
+    "respuesta_correcta": "19",
+    "dificultad": "dificil",
+    "explicacion": "Suma +1, +2, +3, +4…"
+  },
+  {
+    "id": "LOG-39",
+    "pregunta": "¿Qué número sigue? 2, 3, 5, 8, 12,…",
+    "opciones": ["15", "17", "18", "20"],
+    "respuesta_correcta": "17",
+    "dificultad": "dificil",
+    "explicacion": "Suma incremental."
+  },
+  {
+    "id": "LOG-41",
+    "pregunta": "Completa: 3, 7, 15, 31, …",
+    "opciones": ["50", "55", "63", "70"],
+    "respuesta_correcta": "63",
+    "dificultad": "dificil",
+    "explicacion": "Duplicar y sumar 1."
+  },
+  {
+    "id": "LOG-45",
+    "pregunta": "¿Cuál número completa la serie? 6, 11, 21, 41,…",
+    "opciones": ["61", "81", "101", "121"],
+    "respuesta_correcta": "81",
+    "dificultad": "dificil",
+    "explicacion": "×2 - 1."
+  },
+  {
+    "id": "LOG-49",
+    "pregunta": "Si una figura tiene 20 lados, se llama:",
+    "opciones": ["Dodecágono", "Decágono", "Pentágono", "Icoságono"],
+    "respuesta_correcta": "Icoságono",
+    "dificultad": "dificil",
+    "explicacion": "Icos = 20."
+  },
+  {
+    "id": "LOG-50",
+    "pregunta": "¿Qué número falta? 50, 47, 41, 32, …",
+    "opciones": ["20", "22", "24", "25"],
+    "respuesta_correcta": "20",
+    "dificultad": "dificil",
+    "explicacion": "Restas -3, -6, -9, -12."
+  }
+  ,
+  {
+    "id": "LOG-51",
+    "pregunta": "¿Cuál número falta? 2, 6, 12, 20, 30, …",
+    "opciones": ["40", "42", "44", "45"],
+    "respuesta_correcta": "42",
+    "dificultad": "dificil",
+    "explicacion": "Multiplicación de consecutivos: 1×2, 2×3, 3×4, 4×5, 5×6, 6×7."
+  },
+  {
+    "id": "LOG-52",
+    "pregunta": "Si A→B significa A+2, B→C significa B×3, ¿cuánto vale 5→6→7?",
+    "opciones": ["21", "42", "63", "84"],
+    "respuesta_correcta": "63",
+    "dificultad": "dificil",
+    "explicacion": "5+2=7, luego 7×3=21, luego 21×3=63."
+  },
+  {
+    "id": "LOG-53",
+    "pregunta": "¿Qué número completa? 1, 1, 2, 3, 5, 8, 13, …",
+    "opciones": ["18", "19", "20", "21"],
+    "respuesta_correcta": "21",
+    "dificultad": "dificil",
+    "explicacion": "Secuencia de Fibonacci: suma de los dos anteriores."
+  },
+  {
+    "id": "LOG-54",
+    "pregunta": "Si 3 gatos atrapan 3 ratones en 3 minutos, ¿cuántos gatos se necesitan para atrapar 100 ratones en 100 minutos?",
+    "opciones": ["3", "33", "100", "300"],
+    "respuesta_correcta": "3",
+    "dificultad": "dificil",
+    "explicacion": "Cada gato atrapa 1 ratón por minuto proporcionalmente."
+  },
+  {
+    "id": "LOG-55",
+    "pregunta": "¿Qué número sigue? 1, 4, 9, 16, 25, 36, 49, …",
+    "opciones": ["56", "60", "63", "64"],
+    "respuesta_correcta": "64",
+    "dificultad": "dificil",
+    "explicacion": "Cuadrados perfectos: 8²=64."
+  },
+  {
+    "id": "LOG-56",
+    "pregunta": "Si un reloj marca 3:15, ¿qué ángulo hay entre las manecillas?",
+    "opciones": ["0°", "7.5°", "15°", "22.5°"],
+    "respuesta_correcta": "7.5°",
+    "dificultad": "dificil",
+    "explicacion": "Horario avanza 0.5° por minuto. 15 min × 0.5 = 7.5°."
+  },
+  {
+    "id": "LOG-57",
+    "pregunta": "¿Cuál es el siguiente número primo después del 89?",
+    "opciones": ["91", "93", "97", "99"],
+    "respuesta_correcta": "97",
+    "dificultad": "dificil",
+    "explicacion": "91=7×13, 93=3×31, 99=9×11."
+  },
+  {
+    "id": "LOG-58",
+    "pregunta": "Si 2^10 = 1024, ¿cuánto vale 2^9?",
+    "opciones": ["256", "512", "768", "1000"],
+    "respuesta_correcta": "512",
+    "dificultad": "dificil",
+    "explicacion": "1024 / 2 = 512."
+  },
+  {
+    "id": "LOG-59",
+    "pregunta": "¿Qué número completa? 243, 81, 27, 9, …",
+    "opciones": ["1", "3", "6", "9"],
+    "respuesta_correcta": "3",
+    "dificultad": "dificil",
+    "explicacion": "Dividir entre 3 cada vez."
+  },
+  {
+    "id": "LOG-60",
+    "pregunta": "Si un número es divisible por 6 y por 8, también es divisible por:",
+    "opciones": ["12", "14", "16", "24"],
+    "respuesta_correcta": "24",
+    "dificultad": "dificil",
+    "explicacion": "MCM(6,8) = 24."
+  },
+  {
+    "id": "LOG-61",
+    "pregunta": "¿Cuál número no pertenece? 2, 3, 5, 7, 11, 13, 15",
+    "opciones": ["2", "3", "13", "15"],
+    "respuesta_correcta": "15",
+    "dificultad": "dificil",
+    "explicacion": "15 no es primo (3×5)."
+  }
+]

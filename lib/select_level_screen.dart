@@ -5,8 +5,7 @@ import 'hud_widget.dart';
 import 'comodines_screen.dart';
 import 'jefes_screen.dart';
 import '../data/progress_manager.dart';
-import '../widgets/back_button_widget.dart';
-
+import 'main.dart';
 
 class SelectLevelScreen extends StatefulWidget {
   const SelectLevelScreen({super.key});
@@ -47,23 +46,31 @@ class _SelectLevelScreenState extends State<SelectLevelScreen>
     },
   ];
 
-@override
-void initState() {
-  super.initState();
-  _controller = AnimationController(
-    vsync: this,
-    duration: const Duration(seconds: 5),
-  )..repeat(); // 🔹 Crea la animación del fondo
-  _loadCoins(); // 🔹 Cargar monedas
-}
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 15),
+    )..repeat();
+    _loadCoins();
+  }
 
+  Future<void> _loadCoins() async {
+    final progress = await ProgressManager.loadProgress();
+    if (!mounted) return;
+    setState(() {
+      coins = progress.coins;
+    });
+  }
 
-Future<void> _loadCoins() async {
-  final progress = await ProgressManager.loadProgress();
-  setState(() {
-    coins = progress.coins;
-  });
-}
+  void _refreshCoins() async {
+    final progress = await ProgressManager.loadProgress();
+    if (!mounted) return;
+    setState(() {
+      coins = progress.coins;
+    });
+  }
 
   @override
   void dispose() {
@@ -74,54 +81,81 @@ Future<void> _loadCoins() async {
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
-    final isSmallScreen = size.width < 450;
+    final isSmall = size.width < 450;
 
     return Scaffold(
-      backgroundColor: const Color(0xFF140B24),
+      backgroundColor: const Color(0xFF1A1A2E),
       body: Stack(
-         
         children: [
+          // ✅ FONDO CASTILLO MEDIEVAL ANIMADO CON NUBES Y ANTORCHAS
           AnimatedBuilder(
             animation: _controller,
             builder: (context, _) => CustomPaint(
-              painter: RetroGridPainter(_controller.value),
+              painter: MedievalCastlePainter(_controller.value),
               size: size,
             ),
           ),
 
           SafeArea(
-            
             child: Column(
               children: [
+                const SizedBox(height: 12),
                 GameHUD(
                   coins: coins,
                   onOpenComodines: () => Navigator.push(
                     context,
                     MaterialPageRoute(builder: (_) => const ComodinesScreen()),
-                  ),
-                  onOpenJefes: () => Navigator.push(
+                  ).then((_) => _refreshCoins()),
+                 onOpenJefes: () => Navigator.push(
                     context,
                     MaterialPageRoute(builder: (_) => const JefesScreen()),
+                  ).then((_) => _refreshCoins()),
+
+                ),
+
+                const SizedBox(height: 20),
+
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Text(
+                    "SELECCIONA TU DESTINO",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontFamily: 'PressStart2P',
+                      fontSize: isSmall ? 16 : 22,
+                      color: const Color(0xFFFFD700),
+                      letterSpacing: 2,
+                      shadows: [
+                        Shadow(
+                          blurRadius: 12,
+                          color: const Color(0xFFFFD700).withOpacity(0.8),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
 
+                const SizedBox(height: 30),
+
                 Expanded(
                   child: Padding(
-                    padding: const EdgeInsets.all(22.0),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: isSmall ? 16 : 30,
+                      vertical: 10,
+                    ),
                     child: GridView.builder(
                       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: isSmallScreen ? 1 : 2,
-                        mainAxisSpacing: 26,
-                        crossAxisSpacing: 26,
-                        childAspectRatio: isSmallScreen ? 1.25 : 1.1,
+                        crossAxisCount: isSmall ? 1 : 2,
+                        mainAxisSpacing: isSmall ? 20 : 26,
+                        crossAxisSpacing: isSmall ? 16 : 26,
+                        childAspectRatio: isSmall ? 1.2 : 1.1,
                       ),
                       itemCount: levels.length,
                       itemBuilder: (context, index) {
                         final level = levels[index];
                         return TweenAnimationBuilder<double>(
                           tween: Tween(begin: 0, end: 1),
-                          duration:
-                              Duration(milliseconds: 600 + (index * 200)),
+                          duration: Duration(milliseconds: 600 + (index * 200)),
                           builder: (context, value, child) {
                             return Transform.translate(
                               offset: Offset(0, (1 - value) * 40),
@@ -137,10 +171,9 @@ Future<void> _loadCoins() async {
                                       Navigator.push(
                                         context,
                                         MaterialPageRoute(
-                                          builder: (context) =>
-                                              const PurgatorioScreen(),
+                                          builder: (_) => const PurgatorioScreen(),
                                         ),
-                                      );
+                                      ).then((_) => _refreshCoins());
                                     }
                                   },
                                 ),
@@ -152,17 +185,75 @@ Future<void> _loadCoins() async {
                     ),
                   ),
                 ),
+
+                const SizedBox(height: 80),
               ],
             ),
           ),
-        const RetroBackButton(), // ← ESTE ES EL NOMBRE CORRECTO
+
+          // ✅ BOTÓN MEJORADO CON ÍCONO DE PUERTA
+          Positioned(
+            left: 20,
+            bottom: 20,
+            child: GestureDetector(
+              onTap: () {
+                Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(builder: (_) => const HomeScreen()),
+                  (route) => false,
+                );
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 16,
+                ),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF2E1A4F), Color(0xFF1A1A2E)],
+                  ),
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(
+                    color: const Color(0xFFFFD700),
+                    width: 2.5,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFFFFD700).withOpacity(0.4),
+                      blurRadius: 16,
+                      spreadRadius: 2,
+                    ),
+                  ],
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: const [
+                    Icon(
+                      Icons.exit_to_app,
+                      color: Color(0xFFFFD700),
+                      size: 28,
+                    ),
+                    SizedBox(width: 12),
+                    Text(
+                      "SALIR",
+                      style: TextStyle(
+                        fontFamily: 'PressStart2P',
+                        fontSize: 14,
+                        color: Color(0xFFFFD700),
+                        letterSpacing: 1.5,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
         ],
       ),
     );
   }
 }
 
-/// ---------- TARJETAS DE NIVELES ----------
 class _LevelCard extends StatefulWidget {
   final String title;
   final String description;
@@ -187,7 +278,7 @@ class _LevelCardState extends State<_LevelCard> {
 
   @override
   Widget build(BuildContext context) {
-    final isSmallScreen = MediaQuery.of(context).size.width < 450;
+    final isSmall = MediaQuery.of(context).size.width < 450;
 
     return MouseRegion(
       onEnter: (_) => setState(() => _hover = true),
@@ -195,7 +286,7 @@ class _LevelCardState extends State<_LevelCard> {
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 250),
         decoration: BoxDecoration(
-          color: const Color(0xFF24133D),
+          color: const Color(0xFF24133D).withOpacity(0.9),
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
@@ -228,19 +319,21 @@ class _LevelCardState extends State<_LevelCard> {
             alignment: Alignment.center,
             children: [
               Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 14, vertical: 18),
+                padding: EdgeInsets.symmetric(
+                  horizontal: isSmall ? 12 : 14,
+                  vertical: isSmall ? 16 : 18,
+                ),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Icon(
-                      Icons.bolt_rounded,
-                      size: isSmallScreen ? 60 : 70,
+                      Icons.castle_rounded,
+                      size: isSmall ? 55 : 70,
                       color: widget.available
                           ? widget.color
                           : Colors.grey.shade600,
                     ),
-                    const SizedBox(height: 14),
+                    SizedBox(height: isSmall ? 12 : 14),
                     Text(
                       widget.title,
                       textAlign: TextAlign.center,
@@ -248,9 +341,9 @@ class _LevelCardState extends State<_LevelCard> {
                         color: widget.available
                             ? widget.color
                             : const Color(0xFF666666),
-                        fontSize: isSmallScreen ? 20 : 26,
+                        fontSize: isSmall ? 14 : 18,
                         fontFamily: 'PressStart2P',
-                        letterSpacing: 2,
+                        letterSpacing: 1.5,
                         fontWeight: FontWeight.bold,
                         shadows: [
                           Shadow(
@@ -260,7 +353,7 @@ class _LevelCardState extends State<_LevelCard> {
                         ],
                       ),
                     ),
-                    const SizedBox(height: 18),
+                    SizedBox(height: isSmall ? 14 : 18),
                     Text(
                       widget.description,
                       textAlign: TextAlign.center,
@@ -269,15 +362,9 @@ class _LevelCardState extends State<_LevelCard> {
                             ? Colors.white
                             : const Color(0xFF888888),
                         fontFamily: 'VT323',
-                        fontSize: isSmallScreen ? 22 : 24,
-                        height: 1.5,
-                        letterSpacing: 1.3,
-                        shadows: [
-                          Shadow(
-                            color: Colors.white.withOpacity(0.4),
-                            blurRadius: 8,
-                          ),
-                        ],
+                        fontSize: isSmall ? 22 : 26,
+                        height: 1.4,
+                        letterSpacing: 1.2,
                       ),
                     ),
                   ],
@@ -288,22 +375,24 @@ class _LevelCardState extends State<_LevelCard> {
                   top: 10,
                   right: 10,
                   child: Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 6,
+                    ),
                     decoration: BoxDecoration(
-                      color: Colors.black.withOpacity(0.7),
+                      color: Colors.black.withOpacity(0.8),
                       borderRadius: BorderRadius.circular(10),
                       border: Border.all(
                         color: widget.color.withOpacity(0.8),
                         width: 1.4,
                       ),
                     ),
-                    child: const Text(
+                    child: Text(
                       "PRÓXIMAMENTE",
                       style: TextStyle(
                         color: Colors.white70,
                         fontFamily: 'PressStart2P',
-                        fontSize: 8,
+                        fontSize: isSmall ? 7 : 8,
                       ),
                     ),
                   ),
@@ -316,26 +405,149 @@ class _LevelCardState extends State<_LevelCard> {
   }
 }
 
-class RetroGridPainter extends CustomPainter {
+// ================================================================
+// FONDO CASTILLO MEDIEVAL MEJORADO
+// ================================================================
+class MedievalCastlePainter extends CustomPainter {
   final double progress;
-  RetroGridPainter(this.progress);
+
+  MedievalCastlePainter(this.progress);
 
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = const Color(0xFF00FFF7).withOpacity(0.1)
-      ..strokeWidth = 1.0;
+    // Cielo nocturno
+    final skyGradient = LinearGradient(
+      begin: Alignment.topCenter,
+      end: Alignment.bottomCenter,
+      colors: [
+        const Color(0xFF0A0A1A),
+        const Color(0xFF1A1A2E),
+        const Color(0xFF2E1A4F),
+      ],
+    );
 
-    for (double y = 0; y < size.height; y += 25) {
-      canvas.drawLine(Offset(0, y), Offset(size.width, y), paint);
+    canvas.drawRect(
+      Offset.zero & size,
+      Paint()..shader = skyGradient.createShader(Offset.zero & size),
+    );
+
+    // ✅ NUBES FLOTANTES
+    final cloudPaint = Paint()
+      ..color = const Color(0xFF1E1E2E).withOpacity(0.5);
+
+    final random = math.Random(123);
+    for (int i = 0; i < 8; i++) {
+      final x = ((random.nextDouble() * size.width) + progress * size.width * 0.3) % size.width;
+      final y = size.height * 0.2 + random.nextDouble() * size.height * 0.2;
+
+      canvas.drawOval(
+        Rect.fromCenter(center: Offset(x, y), width: 120, height: 40),
+        cloudPaint,
+      );
     }
 
-    for (double x = 0; x < size.width; x += 25) {
-      final offset = math.sin(progress * 2 * math.pi + x / 60) * 3;
-      canvas.drawLine(
-        Offset(x + offset, 0),
-        Offset(x - offset, size.height),
-        paint,
+    // Estrellas parpadeantes
+    for (int i = 0; i < 100; i++) {
+      final x = random.nextDouble() * size.width;
+      final y = random.nextDouble() * size.height * 0.6;
+
+      final brightness = (math.sin(progress * math.pi * 2 + i) + 1) / 2;
+      final starPaint = Paint()
+        ..color = Colors.white.withOpacity(brightness * 0.8);
+
+      canvas.drawCircle(Offset(x, y), i % 3 == 0 ? 2 : 1, starPaint);
+    }
+
+    // Luna
+    final moonGlow = Paint()
+      ..color = const Color(0xFFE6E6FA).withOpacity(0.3)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 40);
+
+    canvas.drawCircle(
+      Offset(size.width * 0.85, size.height * 0.15),
+      60,
+      moonGlow,
+    );
+
+    final moonCore = Paint()..color = const Color(0xFFE6E6FA);
+    canvas.drawCircle(
+      Offset(size.width * 0.85, size.height * 0.15),
+      40,
+      moonCore,
+    );
+
+    // Castillo silueta
+    final castlePaint = Paint()
+      ..color = const Color(0xFF0D0D1A).withOpacity(0.9);
+
+    final castlePath = Path()
+      ..moveTo(0, size.height * 0.7)
+      ..lineTo(size.width * 0.2, size.height * 0.55)
+      ..lineTo(size.width * 0.2, size.height * 0.45)
+      ..lineTo(size.width * 0.25, size.height * 0.45)
+      ..lineTo(size.width * 0.25, size.height * 0.5)
+      ..lineTo(size.width * 0.3, size.height * 0.5)
+      ..lineTo(size.width * 0.3, size.height * 0.45)
+      ..lineTo(size.width * 0.35, size.height * 0.45)
+      ..lineTo(size.width * 0.35, size.height * 0.55)
+      ..lineTo(size.width * 0.5, size.height * 0.65)
+      ..lineTo(size.width * 0.65, size.height * 0.55)
+      ..lineTo(size.width * 0.65, size.height * 0.45)
+      ..lineTo(size.width * 0.7, size.height * 0.45)
+      ..lineTo(size.width * 0.7, size.height * 0.5)
+      ..lineTo(size.width * 0.75, size.height * 0.5)
+      ..lineTo(size.width * 0.75, size.height * 0.45)
+      ..lineTo(size.width * 0.8, size.height * 0.45)
+      ..lineTo(size.width * 0.8, size.height * 0.55)
+      ..lineTo(size.width, size.height * 0.7)
+      ..lineTo(size.width, size.height)
+      ..lineTo(0, size.height)
+      ..close();
+
+    canvas.drawPath(castlePath, castlePaint);
+
+    // ✅ ANTORCHAS CON FUEGO ANIMADO
+    final torchPositions = [
+      Offset(size.width * 0.22, size.height * 0.48),
+      Offset(size.width * 0.78, size.height * 0.48),
+    ];
+
+    for (final pos in torchPositions) {
+      // Llama base
+      final flameGlow = Paint()
+        ..color = const Color(0xFFFF6600).withOpacity(0.6)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 20);
+
+      final flameSize = 18 + math.sin(progress * math.pi * 4) * 4;
+
+      canvas.drawOval(
+        Rect.fromCenter(center: pos, width: flameSize, height: flameSize * 1.5),
+        flameGlow,
+      );
+
+      // Núcleo de llama
+      final flameCore = Paint()
+        ..color = const Color(0xFFFFD700);
+
+      canvas.drawOval(
+        Rect.fromCenter(center: pos, width: flameSize * 0.5, height: flameSize * 0.8),
+        flameCore,
+      );
+    }
+
+    // Ventanas iluminadas
+    final windowPaint = Paint()..color = const Color(0xFFFFD700).withOpacity(0.8);
+
+    final windows = [
+      Offset(size.width * 0.28, size.height * 0.52),
+      Offset(size.width * 0.68, size.height * 0.5),
+      Offset(size.width * 0.74, size.height * 0.52),
+    ];
+
+    for (final pos in windows) {
+      canvas.drawRect(
+        Rect.fromCenter(center: pos, width: 8, height: 12),
+        windowPaint,
       );
     }
   }

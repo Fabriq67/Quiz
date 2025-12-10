@@ -101,7 +101,7 @@ class GameHUD extends StatelessWidget {
                 ),
                 const SizedBox(width: 4),
                 Text(
-                  "Jefes",
+                  "Codice",
                   style: TextStyle(
                     fontFamily: 'VT323',
                     color: Colors.white,

@@ -1,0 +1,488 @@
+[
+  {
+    "id": "SCI-F-01",
+    "pregunta": "Que planeta es conocido como el planeta rojo?",
+    "opciones": ["Marte", "Venus", "Jupiter", "Mercurio"],
+    "respuesta_correcta": "Marte",
+    "dificultad": "facil",
+    "explicacion": "Marte es llamado asi por el color de su superficie."
+  },
+  {
+    "id": "SCI-F-02",
+    "pregunta": "Que particula tiene carga negativa?",
+    "opciones": ["Proton", "Neutron", "Electron", "Ion"],
+    "respuesta_correcta": "Electron",
+    "dificultad": "facil",
+    "explicacion": "El electron es la particula con carga negativa."
+  },
+  {
+    "id": "SCI-F-03",
+    "pregunta": "Como se llama el proceso por el que las plantas producen su alimento?",
+    "opciones": ["Respiracion", "Fotosintesis", "Germinacion", "Fermentacion"],
+    "respuesta_correcta": "Fotosintesis",
+    "dificultad": "facil",
+    "explicacion": "La fotosintesis convierte luz en energia para la planta."
+  },
+  {
+    "id": "SCI-F-04",
+    "pregunta": "Que dispositivo se usa para almacenar datos?",
+    "opciones": ["Monitor", "Teclado", "Disco duro", "Impresora"],
+    "respuesta_correcta": "Disco duro",
+    "dificultad": "facil",
+    "explicacion": "El disco duro permite almacenar informacion digital."
+  },
+  {
+    "id": "SCI-F-05",
+    "pregunta": "Cual es el satelite natural de la Tierra?",
+    "opciones": ["Europa", "Luna", "Titan", "Io"],
+    "respuesta_correcta": "Luna",
+    "dificultad": "facil",
+    "explicacion": "La Luna es el unico satelite natural de la Tierra."
+  },
+  {
+    "id": "SCI-F-06",
+    "pregunta": "Cual es la unidad basica de la vida?",
+    "opciones": ["Tejido", "Celula", "Atomo", "Organo"],
+    "respuesta_correcta": "Celula",
+    "dificultad": "facil",
+    "explicacion": "La celula es la unidad esencial de todos los seres vivos."
+  },
+  {
+    "id": "SCI-F-07",
+    "pregunta": "Que tipo de energia produce un panel solar?",
+    "opciones": ["Termica", "Electrica", "Eolica", "Nuclear"],
+    "respuesta_correcta": "Electrica",
+    "dificultad": "facil",
+    "explicacion": "Los paneles solares convierten luz en energia electrica."
+  },
+  {
+    "id": "SCI-F-08",
+    "pregunta": "Que herramienta se usa para programar aplicaciones?",
+    "opciones": ["Paint", "IDE", "Excel", "Antivirus"],
+    "respuesta_correcta": "IDE",
+    "dificultad": "facil",
+    "explicacion": "Un IDE es un entorno para escribir y ejecutar codigo."
+  },
+  {
+    "id": "SCI-F-09",
+    "pregunta": "Cual es el metal principal en los cables electricos?",
+    "opciones": ["Oro", "Cobre", "Plata", "Aluminio"],
+    "respuesta_correcta": "Cobre",
+    "dificultad": "facil",
+    "explicacion": "El cobre conduce muy bien la electricidad."
+  },
+  {
+    "id": "SCI-F-10",
+    "pregunta": "Que ciencia estudia los cuerpos celestes?",
+    "opciones": ["Geologia", "Fisica", "Astronomia", "Biologia"],
+    "respuesta_correcta": "Astronomia",
+    "dificultad": "facil",
+    "explicacion": "La astronomia estudia planetas, estrellas y galaxias."
+  },
+  {
+    "id": "SCI-F-11",
+    "pregunta": "Que significa CPU?",
+    "opciones": ["Centro de procesos unicos", "Unidad central de procesamiento", "Control principal universal", "Sistema de potencia central"],
+    "respuesta_correcta": "Unidad central de procesamiento",
+    "dificultad": "facil",
+    "explicacion": "La CPU ejecuta instrucciones del sistema."
+  },
+  {
+    "id": "SCI-F-12",
+    "pregunta": "El hielo es agua en que estado?",
+    "opciones": ["Solido", "Liquido", "Gaseoso", "Plasma"],
+    "respuesta_correcta": "Solido",
+    "dificultad": "facil",
+    "explicacion": "El hielo es agua en estado solido."
+  },
+  {
+    "id": "SCI-F-13",
+    "pregunta": "Cual es la velocidad de la luz?",
+    "opciones": ["300 km/s", "300 mil m/s", "300 mil km/s", "300 m/s"],
+    "respuesta_correcta": "300 mil km/s",
+    "dificultad": "facil",
+    "explicacion": "La luz viaja a unos 300000 km por segundo."
+  },
+  {
+    "id": "SCI-F-14",
+    "pregunta": "Que aparato se usa para medir el tiempo?",
+    "opciones": ["Barometro", "Reloj", "Voltimetro", "Microscopio"],
+    "respuesta_correcta": "Reloj",
+    "dificultad": "facil",
+    "explicacion": "Un reloj mide el paso del tiempo."
+  },
+  {
+    "id": "SCI-F-15",
+    "pregunta": "Que gas permite la respiracion humana?",
+    "opciones": ["Oxigeno", "Helio", "Metano", "CO2"],
+    "respuesta_correcta": "Oxigeno",
+    "dificultad": "facil",
+    "explicacion": "El cuerpo humano usa oxigeno para obtener energia."
+  },
+  {
+    "id": "SCI-F-16",
+    "pregunta": "Que energia mueve un ventilador?",
+    "opciones": ["Eolica", "Electrica", "Nuclear", "Solar"],
+    "respuesta_correcta": "Electrica",
+    "dificultad": "facil",
+    "explicacion": "Los ventiladores funcionan con energia electrica."
+  },
+  {
+    "id": "SCI-F-17",
+    "pregunta": "Que instrumento aumenta el tamano de objetos pequenos?",
+    "opciones": ["Lupa", "Regla", "Telescopio", "Barometro"],
+    "respuesta_correcta": "Lupa",
+    "dificultad": "facil",
+    "explicacion": "Una lupa permite ampliar imagenes."
+  },
+  {
+    "id": "SCI-F-18",
+    "pregunta": "Que formato se usa para imagenes?",
+    "opciones": ["PDF", "JPEG", "DOCX", "TXT"],
+    "respuesta_correcta": "JPEG",
+    "dificultad": "facil",
+    "explicacion": "JPEG es un formato popular de imagen."
+  },
+  {
+    "id": "SCI-F-19",
+    "pregunta": "Como se llama el giro de la Tierra sobre su eje?",
+    "opciones": ["Giro", "Rotacion", "Orbita", "Traslacion"],
+    "respuesta_correcta": "Rotacion",
+    "dificultad": "facil",
+    "explicacion": "La rotacion produce el dia y la noche."
+  },
+  {
+    "id": "SCI-F-20",
+    "pregunta": "Un smartphone es un?",
+    "opciones": ["Periferico", "Dispositivo inteligente", "Herramienta analogica", "Servidor"],
+    "respuesta_correcta": "Dispositivo inteligente",
+    "dificultad": "facil",
+    "explicacion": "Un smartphone combina varias tecnologias digitales."
+  },
+
+
+
+  {
+    "id": "SCI-M-01",
+    "pregunta": "Que energia produce un reactor nuclear?",
+    "opciones": ["Quimica", "Electrica", "Sonora", "Eolica"],
+    "respuesta_correcta": "Electrica",
+    "dificultad": "media",
+    "explicacion": "La reaccion nuclear genera electricidad."
+  },
+  {
+    "id": "SCI-M-02",
+    "pregunta": "Quien desarrollo la teoria de la relatividad?",
+    "opciones": ["Newton", "Tesla", "Einstein", "Bohr"],
+    "respuesta_correcta": "Einstein",
+    "dificultad": "media",
+    "explicacion": "Einstein formulo la relatividad."
+  },
+  {
+    "id": "SCI-M-03",
+    "pregunta": "Que significa HTML?",
+    "opciones": ["Herramienta textual modular ligera", "Hyper text markup language", "Host transfer module link", "High tech model language"],
+    "respuesta_correcta": "Hyper text markup language",
+    "dificultad": "media",
+    "explicacion": "HTML estructura paginas web."
+  },
+  {
+    "id": "SCI-M-04",
+    "pregunta": "Que celulas transportan oxigeno?",
+    "opciones": ["Plaquetas", "Globulos rojos", "Globulos blancos", "Neuronas"],
+    "respuesta_correcta": "Globulos rojos",
+    "dificultad": "media",
+    "explicacion": "Los globulos rojos contienen hemoglobina."
+  },
+  {
+    "id": "SCI-M-05",
+    "pregunta": "Cuando la luz se desvía en un prisma ocurre?",
+    "opciones": ["Reflexion", "Refraccion", "Absorcion", "Difusion"],
+    "respuesta_correcta": "Refraccion",
+    "dificultad": "media",
+    "explicacion": "La luz cambia de direccion al pasar por un prisma."
+  },
+  {
+    "id": "SCI-M-06",
+    "pregunta": "Que lenguaje se usa para machine learning?",
+    "opciones": ["C", "Python", "Swift", "Pascal"],
+    "respuesta_correcta": "Python",
+    "dificultad": "media",
+    "explicacion": "Python tiene librerias de IA."
+  },
+  {
+    "id": "SCI-M-07",
+    "pregunta": "Donde se encuentra el ADN?",
+    "opciones": ["Citoplasma", "Mitocondria", "Nucleo", "Ribosoma"],
+    "respuesta_correcta": "Nucleo",
+    "dificultad": "media",
+    "explicacion": "El ADN esta en el nucleo."
+  },
+  {
+    "id": "SCI-M-08",
+    "pregunta": "Los autos autonomos detectan objetos con?",
+    "opciones": ["Lidar", "Bluetooth", "NFC", "FM Radio"],
+    "respuesta_correcta": "Lidar",
+    "dificultad": "media",
+    "explicacion": "El lidar usa laser para mapear distancias."
+  },
+  {
+    "id": "SCI-M-09",
+    "pregunta": "El wifi usa ondas?",
+    "opciones": ["Sonora", "Electromagnetica", "Ultravioleta", "Ionica"],
+    "respuesta_correcta": "Electromagnetica",
+    "dificultad": "media",
+    "explicacion": "Las ondas electromagneticas transportan datos."
+  },
+  {
+    "id": "SCI-M-10",
+    "pregunta": "Que planeta tiene vientos extremadamente fuertes?",
+    "opciones": ["Neptuno", "Saturno", "Venus", "Jupiter"],
+    "respuesta_correcta": "Neptuno",
+    "dificultad": "media",
+    "explicacion": "Los vientos de Neptuno superan 2000 km/h."
+  },
+  {
+    "id": "SCI-M-11",
+    "pregunta": "La luz es una?",
+    "opciones": ["Onda mecanica", "Onda electromagnetica", "Particula ionica", "Vibracion sonora"],
+    "respuesta_correcta": "Onda electromagnetica",
+    "dificultad": "media",
+    "explicacion": "La luz es radiacion electromagnetica."
+  },
+  {
+    "id": "SCI-M-12",
+    "pregunta": "Como se llama la conversion de sol a electricidad?",
+    "opciones": ["Fotosintesis", "Conversion solar", "Efecto fotoelectrico", "Canalizacion luminica"],
+    "respuesta_correcta": "Efecto fotoelectrico",
+    "dificultad": "media",
+    "explicacion": "Los paneles solares usan el efecto fotoelectrico."
+  },
+  {
+    "id": "SCI-M-13",
+    "pregunta": "Que organelo genera energia en la celula?",
+    "opciones": ["Nucleo", "Mitocondria", "Ribosoma", "Citoplasma"],
+    "respuesta_correcta": "Mitocondria",
+    "dificultad": "media",
+    "explicacion": "La mitocondria produce energia."
+  },
+  {
+    "id": "SCI-M-14",
+    "pregunta": "El sonido viaja mas rapido en?",
+    "opciones": ["Aire", "Vacio", "Agua", "Metal"],
+    "respuesta_correcta": "Metal",
+    "dificultad": "media",
+    "explicacion": "El metal transmite mejor vibraciones."
+  },
+  {
+    "id": "SCI-M-15",
+    "pregunta": "Los satelites orbitan la Tierra gracias a?",
+    "opciones": ["Electromagnetismo", "Gravedad", "Viento solar", "Presion atomica"],
+    "respuesta_correcta": "Gravedad",
+    "dificultad": "media",
+    "explicacion": "La gravedad mantiene a los satelites orbitando."
+  },
+  {
+    "id": "SCI-M-16",
+    "pregunta": "Los codigos QR almacenan informacion mediante?",
+    "opciones": ["Puntos y lineas", "Modulos cuadrados", "Radiofrecuencia", "Lineas paralelas"],
+    "respuesta_correcta": "Modulos cuadrados",
+    "dificultad": "media",
+    "explicacion": "Los QR usan patrones cuadrados."
+  },
+  {
+    "id": "SCI-M-17",
+    "pregunta": "Que gas compone principalmente el Sol?",
+    "opciones": ["Oxigeno", "Hidrogeno", "Helio", "Nitrogeno"],
+    "respuesta_correcta": "Hidrogeno",
+    "dificultad": "media",
+    "explicacion": "El Sol es mayormente hidrogeno."
+  },
+  {
+    "id": "SCI-M-18",
+    "pregunta": "Que medicion usa un voltimetro?",
+    "opciones": ["Intensidad", "Voltaje", "Resistencia", "Potencia"],
+    "respuesta_correcta": "Voltaje",
+    "dificultad": "media",
+    "explicacion": "El voltimetro mide voltios."
+  },
+  {
+    "id": "SCI-M-19",
+    "pregunta": "Que capa protege la Tierra de radiacion UV?",
+    "opciones": ["Manto", "Ozonosfera", "Mesosfera", "Corteza"],
+    "respuesta_correcta": "Ozonosfera",
+    "dificultad": "media",
+    "explicacion": "La capa de ozono bloquea rayos UV."
+  },
+  {
+    "id": "SCI-M-20",
+    "pregunta": "Que molecula transporta la energia celular?",
+    "opciones": ["ATP", "ADN", "ARN", "Glucosa"],
+    "respuesta_correcta": "ATP",
+    "dificultad": "media",
+    "explicacion": "El ATP es la moneda energetica de la celula."
+  },
+
+
+
+  {
+    "id": "SCI-D-01",
+    "pregunta": "Que ley describe la relacion entre presion y volumen de un gas?",
+    "opciones": ["Ley de Ohm", "Ley de Boyle", "Ley de Hooke", "Ley de Faraday"],
+    "respuesta_correcta": "Ley de Boyle",
+    "dificultad": "dificil",
+    "explicacion": "Boyle relaciono presion y volumen inversamente."
+  },
+  {
+    "id": "SCI-D-02",
+    "pregunta": "El estudio de fenomenos a baja temperatura se llama?",
+    "opciones": ["Criogenia", "Termodinamica", "Criptologia", "Antropometria"],
+    "respuesta_correcta": "Criogenia",
+    "dificultad": "dificil",
+    "explicacion": "La criogenia estudia temperaturas extremas."
+  },
+  {
+    "id": "SCI-D-03",
+    "pregunta": "Que teoria combina mecanica cuantica con relatividad especial?",
+    "opciones": ["Teoria M", "Electrodinamica cuantica", "Teoria del caos", "Gravedad cuantica"],
+    "respuesta_correcta": "Electrodinamica cuantica",
+    "dificultad": "dificil",
+    "explicacion": "La EDC combina electrones y fotones."
+  },
+  {
+    "id": "SCI-D-04",
+    "pregunta": "Que algoritmo protege conexiones https?",
+    "opciones": ["AES", "SHA1", "MD5", "Base64"],
+    "respuesta_correcta": "AES",
+    "dificultad": "dificil",
+    "explicacion": "AES es el cifrado mas utilizado."
+  },
+  {
+    "id": "SCI-D-05",
+    "pregunta": "Que particula fue descubierta en 2012?",
+    "opciones": ["Boson de Higgs", "Neutrino tau", "Quark top", "Gluon"],
+    "respuesta_correcta": "Boson de Higgs",
+    "dificultad": "dificil",
+    "explicacion": "El boson de Higgs explica la masa."
+  },
+  {
+    "id": "SCI-D-06",
+    "pregunta": "Como se llama cuando un atomo emite energia al caer de nivel?",
+    "opciones": ["Ionizacion", "Excitacion", "Transicion cuantica", "Desintegracion"],
+    "respuesta_correcta": "Transicion cuantica",
+    "dificultad": "dificil",
+    "explicacion": "La transicion emite fotones."
+  },
+  {
+    "id": "SCI-D-07",
+    "pregunta": "Que tecnologia permite transistores mas pequenos?",
+    "opciones": ["Litografia EUV", "Bluetooth 5", "Carga inversa", "Cobre reforzado"],
+    "respuesta_correcta": "Litografia EUV",
+    "dificultad": "dificil",
+    "explicacion": "EUV reduce el tamano de grabado."
+  },
+  {
+    "id": "SCI-D-08",
+    "pregunta": "La zona de donde nada escapa se llama?",
+    "opciones": ["Cuasar", "Estrella de neutrones", "Agujero negro", "Pulsar"],
+    "respuesta_correcta": "Agujero negro",
+    "dificultad": "dificil",
+    "explicacion": "Ni la luz escapa."
+  },
+  {
+    "id": "SCI-D-09",
+    "pregunta": "La aurora boreal ocurre por?",
+    "opciones": ["Meteoros", "Particulas solares chocando con la magnetosfera", "Ondas gravitacionales", "Irradiacion lunar"],
+    "respuesta_correcta": "Particulas solares chocando con la magnetosfera",
+    "dificultad": "dificil",
+    "explicacion": "Los gases brillan por energia solar."
+  },
+  {
+    "id": "SCI-D-10",
+    "pregunta": "Que sistema operativo usa Google internamente?",
+    "opciones": ["Ubuntu Core", "gLinux", "Kubernetes OS", "ChromeServer"],
+    "respuesta_correcta": "gLinux",
+    "dificultad": "dificil",
+    "explicacion": "gLinux es basado en Debian."
+  },
+  {
+    "id": "SCI-D-11",
+    "pregunta": "Que experimento detecto ondas gravitacionales?",
+    "opciones": ["LIGO", "ATLAS", "CMS", "ALMA"],
+    "respuesta_correcta": "LIGO",
+    "dificultad": "dificil",
+    "explicacion": "LIGO midio deformaciones del espacio."
+  },
+  {
+    "id": "SCI-D-12",
+    "pregunta": "Que formula describe la energia de un foton?",
+    "opciones": ["E=mc2", "E=hf", "F=ma", "P=VI"],
+    "respuesta_correcta": "E=hf",
+    "dificultad": "dificil",
+    "explicacion": "Planck definio la energia del foton."
+  },
+  {
+    "id": "SCI-D-13",
+    "pregunta": "Que particula compone los rayos cosmicos?",
+    "opciones": ["Protones", "Neutrones", "Fotones", "Muones"],
+    "respuesta_correcta": "Protones",
+    "dificultad": "dificil",
+    "explicacion": "Los rayos cosmicos son protones acelerados."
+  },
+  {
+    "id": "SCI-D-14",
+    "pregunta": "Que fenomeno cuántico permite computacion cuantica?",
+    "opciones": ["Superposicion", "Capacitancia", "Holografia", "Resonancia"],
+    "respuesta_correcta": "Superposicion",
+    "dificultad": "dificil",
+    "explicacion": "Los qubits pueden estar en varios estados."
+  },
+  {
+    "id": "SCI-D-15",
+    "pregunta": "Que particula media la fuerza electromagnetica?",
+    "opciones": ["Foton", "Gluon", "Boson W", "Neutrino"],
+    "respuesta_correcta": "Foton",
+    "dificultad": "dificil",
+    "explicacion": "El foton transmite la interaccion electromagnetica."
+  },
+  {
+    "id": "SCI-D-16",
+    "pregunta": "Como se llama la fuerza que expande el universo?",
+    "opciones": ["Materia oscura", "Energia oscura", "Campo higgs", "Fuerza cosmica"],
+    "respuesta_correcta": "Energia oscura",
+    "dificultad": "dificil",
+    "explicacion": "La energia oscura acelera la expansion."
+  },
+  {
+    "id": "SCI-D-17",
+    "pregunta": "Que particula explica la masa?",
+    "opciones": ["Higgs", "Electron", "Gluon", "Tau"],
+    "respuesta_correcta": "Higgs",
+    "dificultad": "dificil",
+    "explicacion": "El campo de Higgs da masa a las particulas."
+  },
+  {
+    "id": "SCI-D-18",
+    "pregunta": "Que instrumento mide la radiacion ionizante?",
+    "opciones": ["Geiger", "Barometro", "Oximetro", "Amperimetro"],
+    "respuesta_correcta": "Geiger",
+    "dificultad": "dificil",
+    "explicacion": "El contador Geiger mide radiacion."
+  },
+  {
+    "id": "SCI-D-19",
+    "pregunta": "Que teoria describe las cuatro fuerzas fundamentales?",
+    "opciones": ["Teoria del todo", "Teoria M", "Relatividad general", "Modelo estandar"],
+    "respuesta_correcta": "Teoria del todo",
+    "dificultad": "dificil",
+    "explicacion": "La teoria del todo busca unificar todas las fuerzas."
+  },
+  {
+    "id": "SCI-D-20",
+    "pregunta": "Que experimento detecta neutrinos?",
+    "opciones": ["Super Kamiokande", "ALICE", "LHCb", "HERA"],
+    "respuesta_correcta": "Super Kamiokande",
+    "dificultad": "dificil",
+    "explicacion": "Super K detecta neutrinos bajo tierra."
+  }
+]

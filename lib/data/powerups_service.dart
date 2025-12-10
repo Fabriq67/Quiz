@@ -7,6 +7,11 @@ class PowerUpsService {
     final raw = await rootBundle.loadString("assets/powerups.json");
     final List data = json.decode(raw);
 
-    return data.map((p) => PowerUp.fromJson(p)).toList();
+    final powerups = data.map((p) => PowerUp.fromJson(p)).toList();
+    
+    // ✅ ORDENAR por precio (de menor a mayor)
+    powerups.sort((a, b) => a.price.compareTo(b.price));
+    
+    return powerups;
   }
 }

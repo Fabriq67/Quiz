@@ -1,9 +1,8 @@
 // ----------------------------------------------------------
-//   PERCEPCIÓN — QUIZ SCREEN (VERSIÓN FINAL)
-//   Incluye: tiempo agotado, reinicio total de nivel,
-//   muerte del jefe, reinicio de bloques, monedas ✓
-//   + Comodines con coste en monedas (gaste al usar)
-//   + 50/50 elimina hasta 2 respuestas incorrectas
+//   PERCEPCIÓN — QUIZ SCREEN (VERSIÓN MEJORADA ATERRADORA)
+//   + Niebla animada, efectos de horror en el jefe
+//   + Interactividad mejorada en respuestas
+//   + Diseño responsive y aterrador
 // ----------------------------------------------------------
 
 import 'dart:async';
@@ -13,7 +12,9 @@ import '../data/percepcion_service.dart';
 import '../models/pregunta_model.dart';
 import '../data/progress_manager.dart';
 import '../models/powerup_model.dart';
+import '../data/powerup_effects.dart';
 import 'percepcion_menu.dart';
+
 
 class PercepcionQuizScreen extends StatefulWidget {
   final int blockId;
@@ -31,8 +32,12 @@ class PercepcionQuizScreen extends StatefulWidget {
   State<PercepcionQuizScreen> createState() => _PercepcionQuizScreenState();
 }
 
-class _PercepcionQuizScreenState extends State<PercepcionQuizScreen> {
+class _PercepcionQuizScreenState extends State<PercepcionQuizScreen>
+    with TickerProviderStateMixin {
   late Future<List<Pregunta>> futurePreguntas;
+  late AnimationController _fogController;
+  late AnimationController _eyeController;
+  late AnimationController _shakeController;
 
   int currentIndex = 0;
   int score = 0;
@@ -43,31 +48,41 @@ class _PercepcionQuizScreenState extends State<PercepcionQuizScreen> {
   String? selectedAnswer;
   bool answerChecked = false;
 
-  List<PowerUp> equipped = [];
+   List<PowerUp> equipped = [];
   List<String> opcionesOcultas = [];
 
   bool isBossFight = false;
   bool bossFailed = false;
   bool _isProcessing = false;
 
-  // COMODINES: control
   Set<String> usedPowerups = {};
-  String? hintedOption; // show eye hint
+  String? hintedOption;
 
   @override
   void initState() {
     super.initState();
 
-    isBossFight = widget.isBoss && widget.blockId == 2;
+    // ✅ EL JEFE ES EL BLOQUE 2
+   isBossFight = widget.isBoss && widget.blockId == 2;
 
-    // Tiempo por bloque
-    timeRemaining = widget.blockId == 1
-        ? 30
-        : widget.blockId == 2
-            ? 20
-            : 12;
+    timeRemaining = widget.blockId == 1 ? 80 : widget.blockId == 2 ? 70 : 12;
 
     futurePreguntas = PercepcionService.obtenerPreguntasBloque(widget.blockId);
+
+    _fogController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 20),
+    )..repeat();
+
+    _eyeController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 3),
+    )..repeat(reverse: true);
+
+    _shakeController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 100),
+    );
 
     startTimer();
     _loadEquipped();
@@ -77,22 +92,37 @@ class _PercepcionQuizScreenState extends State<PercepcionQuizScreen> {
   @override
   void dispose() {
     timer?.cancel();
+    _fogController.dispose();
+    _eyeController.dispose();
+    _shakeController.dispose();
     super.dispose();
   }
 
+  // ...existing code...
+
   Future<void> _loadEquipped() async {
     equipped = await ProgressManager.loadSelectedPowerUps();
+    // ✅ FILTRAR SOLO LOS QUE SON VÁLIDOS (no nulos o vacíos)
+    equipped = equipped.where((p) => p.id.isNotEmpty).toList();
+    if (!mounted) return;
     setState(() {});
   }
 
+// ...existing code...
+
   Future<void> _loadCoins() async {
     final p = await ProgressManager.loadProgress();
+    if (!mounted) return;
     setState(() => coins = p.coins);
   }
 
-  // ----------------------------------------------------------
-  // TEMPORIZADOR
-  // ----------------------------------------------------------
+  void _setHint(String h) => setState(() => hintedOption = h);
+  void _hideSpecificOptions(List<String> ops) =>
+      setState(() => opcionesOcultas.addAll(ops));
+  void _addExtraSeconds(int s) =>
+      setState(() => timeRemaining = (timeRemaining + s).clamp(0, 60));
+  Future<void> _refreshCoins() async => _loadCoins();
+
   void startTimer() {
     timer?.cancel();
     timer = Timer.periodic(const Duration(seconds: 1), (t) {
@@ -106,15 +136,11 @@ class _PercepcionQuizScreenState extends State<PercepcionQuizScreen> {
     });
   }
 
-  // ----------------------------------------------------------
-  // TIEMPO AGOTADO → REINICIAR NIVEL COMPLETO (failBlock)
-  // ----------------------------------------------------------
   void tiempoAgotado() async {
     if (_isProcessing) return;
     _isProcessing = true;
 
     timer?.cancel();
-
     await ProgressManager.failBlock(widget.blockId);
 
     if (!mounted) return;
@@ -122,7 +148,7 @@ class _PercepcionQuizScreenState extends State<PercepcionQuizScreen> {
       context: context,
       barrierDismissible: false,
       builder: (_) => AlertDialog(
-        backgroundColor: Colors.black.withOpacity(0.85),
+        backgroundColor: Colors.black.withOpacity(0.9),
         title: const Text(
           "¡TIEMPO AGOTADO!",
           textAlign: TextAlign.center,
@@ -133,7 +159,7 @@ class _PercepcionQuizScreenState extends State<PercepcionQuizScreen> {
           ),
         ),
         content: const Text(
-          "\nPerdiste el progreso del nivel.\nVuelve a empezar desde el Bloque 1.",
+          "\nLa oscuridad te ha consumido.\nVuelve a empezar.",
           textAlign: TextAlign.center,
           style: TextStyle(
             fontFamily: "VT323",
@@ -148,9 +174,13 @@ class _PercepcionQuizScreenState extends State<PercepcionQuizScreen> {
                 MaterialPageRoute(builder: (_) => const PercepcionMenuScreen()),
                 (route) => false,
               );
+
+              
             },
+
+            
             child: const Text(
-              "VOLVER AL MENÚ",
+              "VOLVER",
               style: TextStyle(
                 color: Colors.cyanAccent,
                 fontFamily: "PressStart2P",
@@ -162,50 +192,41 @@ class _PercepcionQuizScreenState extends State<PercepcionQuizScreen> {
     );
   }
 
-  // ----------------------------------------------------------
-  // RESPUESTA DEL JUGADOR
-  // ----------------------------------------------------------
-  void responder(Pregunta pregunta, String opcion) {
+  Future<void> responder(Pregunta pregunta, String opcion) async {
     if (_isProcessing) return;
 
-    // Bloquear input
     selectedAnswer = opcion;
     answerChecked = true;
     setState(() {});
 
     bool correct = opcion == pregunta.correcta;
 
-    // JEFE → muerte instantánea
+    if (!correct && isBossFight) {
+      _shakeController.forward(from: 0);
+    }
+
     if (isBossFight && !correct) {
       timer?.cancel();
       bossFailed = true;
-      Future.delayed(const Duration(milliseconds: 600), () {
+      await ProgressManager.failBlock(widget.blockId);
+      Future.delayed(const Duration(milliseconds: 800), () {
         muerteInstantanea();
       });
       return;
     }
 
-    // Puntaje normal
     if (correct) score++;
 
-    // Detener tiempo
     timer?.cancel();
-
-    // Pasar a la siguiente pregunta
-    Future.delayed(const Duration(milliseconds: 700), () {
-      pasarSiguiente();
-    });
+    await Future.delayed(const Duration(milliseconds: 700));
+    pasarSiguiente();
   }
 
-  // ----------------------------------------------------------
-  // MUERTE DEL JEFE → REINICIAR NIVEL (failBlock)
-  // ----------------------------------------------------------
   void muerteInstantanea() async {
     if (_isProcessing) return;
     _isProcessing = true;
 
     timer?.cancel();
-
     await ProgressManager.failBlock(widget.blockId);
 
     if (!mounted) return;
@@ -213,10 +234,10 @@ class _PercepcionQuizScreenState extends State<PercepcionQuizScreen> {
       context: context,
       barrierDismissible: false,
       builder: (_) => AlertDialog(
-        backgroundColor: Colors.red.withOpacity(0.85),
+        backgroundColor: Colors.red.shade900.withOpacity(0.95),
         content: const Center(
           child: Text(
-            "¡FALLASTE!\n\nEL JEFE TE ANIQUILÓ",
+            "¡EL OJO TE HA DEVORADO!\n\nINTENTA DE NUEVO",
             textAlign: TextAlign.center,
             style: TextStyle(
               fontFamily: "PressStart2P",
@@ -234,7 +255,7 @@ class _PercepcionQuizScreenState extends State<PercepcionQuizScreen> {
               );
             },
             child: const Text(
-              "VOLVER AL MENÚ",
+              "VOLVER",
               style: TextStyle(
                 color: Colors.cyanAccent,
                 fontFamily: "PressStart2P",
@@ -246,37 +267,23 @@ class _PercepcionQuizScreenState extends State<PercepcionQuizScreen> {
     );
   }
 
-  // ----------------------------------------------------------
-  // SIGUIENTE PREGUNTA
-  // ----------------------------------------------------------
-  void pasarSiguiente() {
+   void pasarSiguiente() {
     selectedAnswer = null;
     answerChecked = false;
     opcionesOcultas = [];
     hintedOption = null;
-       usedPowerups.clear(); // <<< LIMPIA COMODINES CADA PREGUNTA
+    usedPowerups.clear();
 
-    if (widget.blockId == 1) {
-      timeRemaining = 30;
-    } else if (widget.blockId == 2) {
-      timeRemaining = 20;
-    } else {
-      timeRemaining = 12;
-    }
+    timeRemaining = widget.blockId == 1 ? 80 : widget.blockId == 2 ? 70 : 12;
 
     if (currentIndex == widget.totalQuestions - 1) {
       terminarBloque();
     } else {
-      setState(() {
-        currentIndex++;
-      });
+      setState(() => currentIndex++);
       startTimer();
     }
   }
 
-  // ----------------------------------------------------------
-  // CALCULAR MONEDAS GANADAS
-  // ----------------------------------------------------------
   int calcularMonedas() {
     if (widget.blockId == 1) {
       if (score == 5) return 10;
@@ -291,9 +298,6 @@ class _PercepcionQuizScreenState extends State<PercepcionQuizScreen> {
     return 0;
   }
 
-  // ----------------------------------------------------------
-  // TERMINAR BLOQUE
-  // ----------------------------------------------------------
   void terminarBloque() async {
     if (_isProcessing) return;
     _isProcessing = true;
@@ -305,13 +309,12 @@ class _PercepcionQuizScreenState extends State<PercepcionQuizScreen> {
 
     if (!paso) {
       await ProgressManager.failBlock(widget.blockId);
-
       if (!mounted) return;
       await showDialog(
         context: context,
         barrierDismissible: false,
         builder: (_) => AlertDialog(
-          backgroundColor: Colors.black.withOpacity(0.85),
+          backgroundColor: Colors.black.withOpacity(0.9),
           title: const Text(
             "BLOQUE FALLIDO",
             textAlign: TextAlign.center,
@@ -322,7 +325,7 @@ class _PercepcionQuizScreenState extends State<PercepcionQuizScreen> {
             ),
           ),
           content: const Text(
-            "\nPerdiste el progreso del nivel.\nVuelve a empezar desde el Bloque 1.",
+            "\nLa sombra te ha vencido.\nVuelve a intentarlo.",
             textAlign: TextAlign.center,
             style: TextStyle(
               fontFamily: "VT323",
@@ -334,12 +337,13 @@ class _PercepcionQuizScreenState extends State<PercepcionQuizScreen> {
             TextButton(
               onPressed: () {
                 Navigator.of(context).pushAndRemoveUntil(
-                  MaterialPageRoute(builder: (_) => const PercepcionMenuScreen()),
+                  MaterialPageRoute(
+                      builder: (_) => const PercepcionMenuScreen()),
                   (route) => false,
                 );
               },
               child: const Text(
-                "VOLVER AL MENÚ",
+                "VOLVER",
                 style: TextStyle(
                   color: Colors.cyanAccent,
                   fontFamily: "PressStart2P",
@@ -352,8 +356,9 @@ class _PercepcionQuizScreenState extends State<PercepcionQuizScreen> {
       return;
     }
 
+    // ✅ DESBLOQUEAR COMODÍN AL DERROTAR JEFE DE PERCEPCIÓN
     if (isBossFight) {
-      await ProgressManager.defeatBoss("boss_1");
+      await ProgressManager.defeatBoss("boss_percepcion");
     }
 
     final monedasGanadas = calcularMonedas();
@@ -415,159 +420,34 @@ class _PercepcionQuizScreenState extends State<PercepcionQuizScreen> {
     );
   }
 
-  // ----------------------------------------------------------
-  // MANEJO DE COMODINES (USO Y EFECTOS) CON COSTE
-  // ----------------------------------------------------------
-  IconData _iconForPowerUpId(String id) {
-    switch (id) {
-      case 'clarividencia':
-        return Icons.visibility;
-      case 'ocultar':
-      case '50_50':
-        return Icons.close;
-      case 'tiempo_extra':
-        return Icons.timer;
-      default:
-        return Icons.shield;
-    }
-  }
-
-  int _extractPriceFromPowerUp(PowerUp p) {
-    try {
-      final data = p.toJson();
-      final possible = data['price'] ?? data['cost'] ?? data['value'] ?? data['coins'];
-      if (possible == null) return 0;
-      return int.tryParse(possible.toString()) ?? 0;
-    } catch (_) {
-      return 0;
-    }
-  }
-
-  Future<void> _usePowerUp(PowerUp p, Pregunta pregunta) async {
-    try {
-      final data = p.toJson();
-      final id = (data['id'] ?? data['name'] ?? data['_id'] ?? p.toString()).toString();
-      final price = _extractPriceFromPowerUp(p);
-
-      if (usedPowerups.contains(id)) {
-        ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("Comodín ya usado en este bloque.")));
-        return;
-      }
-
-      // comprobaremos monedas
-      final progress = await ProgressManager.loadProgress();
-      if (progress.coins < price) {
-        ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("No tienes suficientes monedas para usar este comodín.")));
-        return;
-      }
-
-      // gasta monedas
-      if (price > 0) {
-        await ProgressManager.addCoins(-price);
-        await _loadCoins(); // refresh coins on HUD
-      }
-
-      // Example effects:
-      if (id == 'clarividencia') {
-        setState(() {
-          hintedOption = pregunta.correcta;
-          usedPowerups.add(id);
-        });
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Se ha revelado la respuesta correcta.")),
-        );
-      } else if (id == 'ocultar' || id == '50_50') {
-        // Remove up to 2 incorrect options
-        final posibles = pregunta.opciones
-            .where((o) => o != pregunta.correcta && !opcionesOcultas.contains(o))
-            .toList();
-        if (posibles.isNotEmpty) {
-          final rnd = math.Random();
-
-          // choose 2 unique incorrects or fewer if not enough
-          final toRemove = <String>{};
-          if (posibles.length == 1) {
-            toRemove.add(posibles.first);
-          } else {
-            while (toRemove.length < 2 && toRemove.length < posibles.length) {
-              toRemove.add(posibles[rnd.nextInt(posibles.length)]);
-            }
-          }
-
-          setState(() {
-            opcionesOcultas.addAll(toRemove);
-            usedPowerups.add(id);
-          });
-
-          final removedCount = toRemove.length;
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text("Se han eliminado $removedCount opción(es) incorrecta(s).")),
-          );
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("No quedan opciones para eliminar.")),
-          );
-        }
-      } else if (id == 'tiempo_extra') {
-        setState(() {
-          timeRemaining += 10;
-          usedPowerups.add(id);
-        });
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Se han añadido 10 segundos.")),
-        );
-      } else {
-        setState(() => usedPowerups.add(id));
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Comodín utilizado.")),
-        );
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Error usando el comodín: $e")));
-    }
-  }
-
-  // ----------------------------------------------------------
-  // COLOR DE OPCIONES
-  // ----------------------------------------------------------
   Color getColor(Pregunta p, String opcion) {
     if (!answerChecked) {
       if (opcion == hintedOption) return Colors.lightBlueAccent;
-      return Colors.cyanAccent;
+      return isBossFight ? const Color(0xFF6BE3FF) : Colors.cyanAccent;
     }
     if (opcion == p.correcta) return Colors.greenAccent;
     if (opcion == selectedAnswer) return Colors.redAccent;
-    return Colors.cyanAccent;
+    return isBossFight ? const Color(0xFF6BE3FF) : Colors.cyanAccent;
   }
 
-  double _scaleFromWidth(double base, double width) {
-    final ratio = (width / 360);
-    final clamped = ratio.clamp(0.85, 1.3);
-    return base * clamped;
-  }
-
-  // ----------------------------------------------------------
-  // UI
-  // ----------------------------------------------------------
   @override
   Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+    final isSmall = size.width < 500;
+
     return Scaffold(
-      backgroundColor: const Color(0xFF150C25),
+      backgroundColor: isBossFight ? const Color(0xFF0A0012) : const Color(0xFF150C25),
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         automaticallyImplyLeading: false,
         centerTitle: true,
         title: Text(
-          isBossFight ? "JEFE: La sombra del ojo" : "BLOQUE ${widget.blockId}",
-          style: const TextStyle(
-            color: Colors.cyanAccent,
+          isBossFight ? "👁️ LA SOMBRA DEL OJO 👁️" : "BLOQUE ${widget.blockId}",
+          style: TextStyle(
+            color: isBossFight ? Colors.redAccent : Colors.cyanAccent,
             fontFamily: "PressStart2P",
-            fontSize: 10,
+            fontSize: isSmall ? 9 : 11,
           ),
         ),
       ),
@@ -582,273 +462,293 @@ class _PercepcionQuizScreenState extends State<PercepcionQuizScreen> {
 
           final preguntas = snapshot.data!;
           final pregunta = preguntas[currentIndex];
-
           final opcionesVisibles = pregunta.opciones
               .where((op) => !opcionesOcultas.contains(op))
               .toList();
 
-          return Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 900),
-              child: LayoutBuilder(
-                builder: (context, constraints) {
-                  final width = constraints.maxWidth;
-                  final scale = (width / 360).clamp(0.85, 1.25);
-
-                  return Stack(
-                    children: [
-                      // Fondo jefe
-                      if (isBossFight)
-                        Positioned.fill(
-                          child: Container(
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                colors: [
-                                  Colors.black.withOpacity(0.18),
-                                  Colors.transparent,
-                                ],
-                                begin: Alignment.topCenter,
-                                end: Alignment.bottomCenter,
+          return Stack(
+            children: [
+              AnimatedBuilder(
+                animation: _fogController,
+                builder: (context, _) => CustomPaint(
+                  painter: _HorrorFogPainter(_fogController.value, isBossFight),
+                  size: size,
+                ),
+              ),
+              if (isBossFight)
+                AnimatedBuilder(
+                  animation: _eyeController,
+                  builder: (context, _) => Positioned(
+                    top: size.height * 0.1,
+                    left: size.width * 0.5 - 80,
+                    child: Opacity(
+                      opacity: 0.15 + (_eyeController.value * 0.15),
+                      child: const Icon(
+                        Icons.remove_red_eye,
+                        size: 160,
+                        color: Colors.redAccent,
+                      ),
+                    ),
+                  ),
+                ),
+              SafeArea(
+                child: AnimatedBuilder(
+                  animation: _shakeController,
+                  builder: (context, child) {
+                    final offset =
+                        math.sin(_shakeController.value * math.pi * 4) * 5;
+                    return Transform.translate(
+                      offset: Offset(offset, 0),
+                      child: child,
+                    );
+                  },
+                  child: Center(
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 900),
+                      child: Padding(
+                        padding: EdgeInsets.all(isSmall ? 18 : 24),
+                        child: Column(
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.star,
+                                    color: Colors.yellowAccent,
+                                    size: isSmall ? 16 : 20),
+                                const SizedBox(width: 6),
+                                Text(
+                                  "$coins",
+                                  style: TextStyle(
+                                    fontFamily: "PressStart2P",
+                                    fontSize: isSmall ? 11 : 13,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 12),
+                            if (equipped.isNotEmpty)
+                              Wrap(
+                                spacing: 10,
+                                runSpacing: 8,
+                                alignment: WrapAlignment.center,
+                               // ...existing code...
+                                children: equipped.map((p) {
+                                  final usado = usedPowerups.contains(p.id);
+                                  final label = (p.name.isNotEmpty) ? p.name : p.id ?? "?";
+                                  return ElevatedButton(
+// ...existing code...
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: usado
+                                          ? Colors.grey
+                                          : const Color(0xFF24133D),
+                                      foregroundColor: Colors.cyanAccent,
+                                      padding: EdgeInsets.symmetric(
+                                        vertical: isSmall ? 8 : 10,
+                                        horizontal: isSmall ? 10 : 12,
+                                      ),
+                                    ),
+                                    onPressed: (usado || answerChecked)
+                                        ? null
+                                        : () async {
+                                            await PowerUpEffects.apply(
+                                              context: context,
+                                              powerUp: p,
+                                              pregunta: pregunta,
+                                              setHint: _setHint,
+                                              hideSpecificOptions:
+                                                  _hideSpecificOptions,
+                                              addExtraSeconds: _addExtraSeconds,
+                                              refreshCoins: _refreshCoins,
+                                              usedPowerUps: usedPowerups,
+                                            );
+                                            if (mounted) setState(() {});
+                                          },
+                                    child: Text(
+                                      label,
+                                      style: TextStyle(
+                                        fontFamily: 'PressStart2P',
+                                        fontSize: isSmall ? 9 : 10,
+                                      ),
+                                    ),
+                                  );
+                                }).toList(),
+                              ),
+                            const SizedBox(height: 16),
+                            Text(
+                              "Puntaje: $score",
+                              style: TextStyle(
+                                fontFamily: "PressStart2P",
+                                fontSize: isSmall ? 11 : 13,
+                                color: isBossFight
+                                    ? Colors.redAccent
+                                    : Colors.cyanAccent,
                               ),
                             ),
-                          ),
-                        ),
-
-                      Padding(
-                        padding: EdgeInsets.all(18 * scale),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            //-----------------------------------------------------
-                            // MAIN CONTENT (HUD + preguntas)
-                            //-----------------------------------------------------
+                            const SizedBox(height: 8),
+                            Text(
+                              "$timeRemaining",
+                              style: TextStyle(
+                                fontFamily: "PressStart2P",
+                                fontSize: isSmall ? 24 : 30,
+                                color: timeRemaining < 6
+                                    ? Colors.redAccent
+                                    : (isBossFight
+                                        ? Colors.redAccent
+                                        : Colors.cyanAccent),
+                              ),
+                            ),
+                            const SizedBox(height: 24),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 8),
+                              child: Text(
+                                pregunta.pregunta,
+                                style: TextStyle(
+                                  fontFamily: "VT323",
+                                  fontSize: isSmall ? 24 : 30,
+                                  color: Colors.white,
+                                  shadows: isBossFight
+                                      ? [
+                                          const Shadow(
+                                            blurRadius: 12,
+                                            color: Colors.redAccent,
+                                          ),
+                                        ]
+                                      : null,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                            const SizedBox(height: 26),
                             Expanded(
-                              child: SingleChildScrollView(
-                                child: Column(
-                                  children: [
-                                    //----------------------
-                                    // HUD (coins + comodines)
-                                    //----------------------
-                                    Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
-                                      children: [
-                                        Icon(Icons.star,
-                                            color: Colors.yellowAccent,
-                                            size: 18 * scale),
-                                        SizedBox(width: 4 * scale),
-                                        Text(
-                                          "$coins",
-                                          style: TextStyle(
-                                            fontFamily: "PressStart2P",
-                                            fontSize: _scaleFromWidth(12, width),
-                                            color: Colors.white,
-                                          ),
-                                        ),
-
-                                        SizedBox(width: 20 * scale),
-
-                                        if (equipped.isNotEmpty)
-                                          Row(
-                                            children: equipped.map((p) {
-                                              final data = p.toJson();
-                                              final id = (data['id'] ?? data['name'] ?? data['_id'] ?? p.toString()).toString();
-                                              final used = usedPowerups.contains(id);
-                                              final icon = _iconForPowerUpId(id);
-                                              final price = _extractPriceFromPowerUp(p);
-
-                                              return Padding(
-                                                padding: EdgeInsets.only(left: 8 * scale),
-                                                child: Tooltip(
-                                                  message: "$id - $price monedas",
-                                                  child: Column(
-                                                    children: [
-                                                      CircleAvatar(
-                                                        backgroundColor: used ? Colors.grey.shade700 : Colors.white,
-                                                        radius: 14 * scale,
-                                                        child: IconButton(
-                                                          padding: EdgeInsets.zero,
-                                                          onPressed: (used || coins < price) ? null : () => _usePowerUp(p, pregunta),
-                                                          icon: Icon(icon,
-                                                              color: used ? Colors.black45 : Colors.black,
-                                                              size: 16 * scale),
-                                                        ),
-                                                      ),
-                                                      SizedBox(height: 2 * scale),
-                                                      Text(
-                                                        "$price",
-                                                        style: TextStyle(
-                                                          color: coins < price ? Colors.redAccent : Colors.white,
-                                                          fontSize: 10 * scale,
-                                                          fontFamily: 'PressStart2P',
-                                                        ),
-                                                      ),
-                                                    ],
-                                                  ),
-                                                ),
+                              child: ListView.builder(
+                                itemCount: opcionesVisibles.length,
+                                itemBuilder: (context, idx) {
+                                  final opcion = opcionesVisibles[idx];
+                                  return Padding(
+                                    padding: const EdgeInsets.only(bottom: 12),
+                                    child: InkWell(
+                                      onTap: answerChecked
+                                          ? null
+                                          : () {
+                                              setState(() {
+                                                selectedAnswer = opcion;
+                                                answerChecked = true;
+                                              });
+                                              Future.delayed(
+                                                const Duration(
+                                                    milliseconds: 500),
+                                                () =>
+                                                    responder(pregunta, opcion),
                                               );
-                                            }).toList(),
-                                          ),
-                                      ],
-                                    ),
-
-                                    SizedBox(height: 12 * scale),
-
-                                    //----------------------
-                                    // SCORE
-                                    //----------------------
-                                    Text(
-                                      "Puntaje: $score",
-                                      style: TextStyle(
-                                        fontFamily: "PressStart2P",
-                                        fontSize: _scaleFromWidth(12, width),
-                                        color: Colors.cyanAccent,
-                                      ),
-                                    ),
-
-                                    SizedBox(height: 8 * scale),
-
-                                    //----------------------
-                                    // TIMER
-                                    //----------------------
-                                    Text(
-                                      "$timeRemaining",
-                                      style: TextStyle(
-                                        fontFamily: "PressStart2P",
-                                        fontSize: _scaleFromWidth(26, width),
-                                        color: Colors.cyanAccent,
-                                      ),
-                                    ),
-
-                                    SizedBox(height: 28 * scale),
-
-                                    //----------------------
-                                    // PREGUNTA
-                                    //----------------------
-                                    Padding(
-                                      padding: EdgeInsets.symmetric(horizontal: 6 * scale),
-                                      child: Text(
-                                        pregunta.pregunta,
-                                        style: TextStyle(
-                                          fontFamily: "VT323",
-                                          fontSize: _scaleFromWidth(28, width),
-                                          color: Colors.white,
+                                            },
+                                      child: AnimatedContainer(
+                                        duration:
+                                            const Duration(milliseconds: 300),
+                                        curve: Curves.easeOut,
+                                        padding: EdgeInsets.symmetric(
+                                          vertical: isSmall ? 14 : 18,
+                                          horizontal: isSmall ? 16 : 20,
                                         ),
-                                        textAlign: TextAlign.center,
-                                      ),
-                                    ),
-
-                                    SizedBox(height: 26 * scale),
-
-                                    //----------------------
-                                    // OPCIONES
-                                    //----------------------
-                                    if (hintedOption != null)
-                                      Padding(
-                                        padding: const EdgeInsets.only(bottom: 8.0),
-                                        child: Text(
-                                          "Comodín aplicado: respuesta sugerida",
-                                          style: TextStyle(
-                                            color: Colors.lightBlueAccent,
-                                            fontFamily: 'VT323',
-                                            fontSize: _scaleFromWidth(16, width),
-                                          ),
-                                        ),
-                                      ),
-
-                                    ListView.builder(
-                                      shrinkWrap: true,
-                                      physics: const NeverScrollableScrollPhysics(),
-                                      itemCount: opcionesVisibles.length,
-                                      itemBuilder: (context, idx) {
-                                        final opcion = opcionesVisibles[idx];
-                                        return Padding(
-                                          padding: EdgeInsets.only(bottom: 12 * scale),
-                                          child: InkWell(
-                                            onTap: answerChecked
-                                                ? null
-                                                : () {
-                                                    setState(() {
-                                                      selectedAnswer = opcion;
-                                                      answerChecked = true;
-                                                    });
-                                                    Future.delayed(const Duration(milliseconds: 500), () => responder(pregunta, opcion));
-                                                  },
-                                            child: AnimatedContainer(
-                                              duration: const Duration(milliseconds: 200),
-                                              padding: EdgeInsets.symmetric(
-                                                vertical: 14 * scale,
-                                                horizontal: 18 * scale,
-                                              ),
-                                              decoration: BoxDecoration(
-                                                color: getColor(pregunta, opcion),
-                                                borderRadius: BorderRadius.circular(18 * scale),
-                                              ),
-                                              child: Row(
-                                                mainAxisAlignment: MainAxisAlignment.center,
-                                                children: [
-                                                  Expanded(
-                                                    child: Center(
-                                                      child: Text(
-                                                        opcion,
-                                                        style: TextStyle(
-                                                          fontFamily: "PressStart2P",
-                                                          fontSize: _scaleFromWidth(11, width),
-                                                          color: Colors.black,
-                                                        ),
-                                                        textAlign: TextAlign.center,
-                                                      ),
-                                                    ),
+                                        decoration: BoxDecoration(
+                                          color: getColor(pregunta, opcion),
+                                          borderRadius:
+                                              BorderRadius.circular(18),
+                                          boxShadow: answerChecked &&
+                                                  opcion == selectedAnswer
+                                              ? [
+                                                  BoxShadow(
+                                                    color: getColor(
+                                                            pregunta, opcion)
+                                                        .withOpacity(0.6),
+                                                    blurRadius: 20,
+                                                    spreadRadius: 3,
                                                   ),
-                                                  if (opcion == hintedOption)
-                                                    Padding(
-                                                      padding: EdgeInsets.only(left: 8 * scale),
-                                                      child: Icon(
-                                                        Icons.remove_red_eye,
-                                                        color: Colors.black54,
-                                                        size: 18 * scale,
-                                                      ),
-                                                    ),
-                                                ],
+                                                ]
+                                              : [],
+                                        ),
+                                        child: Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                          children: [
+                                            Expanded(
+                                              child: Text(
+                                                opcion,
+                                                style: TextStyle(
+                                                  fontFamily: "PressStart2P",
+                                                  fontSize: isSmall ? 11 : 13,
+                                                  color: Colors.black,
+                                                ),
+                                                textAlign: TextAlign.center,
                                               ),
                                             ),
-                                          ),
-                                        );
-                                      },
-                                    ),
-
-                                    SizedBox(height: 20 * scale),
-
-                                    //----------------------
-                                    // PROGRESO
-                                    //----------------------
-                                    Text(
-                                      "Pregunta ${currentIndex + 1} / ${widget.totalQuestions}",
-                                      style: TextStyle(
-                                        fontFamily: "VT323",
-                                        fontSize: _scaleFromWidth(20, width),
-                                        color: Colors.white70,
+                                            if (opcion == hintedOption)
+                                              const Padding(
+                                                padding:
+                                                    EdgeInsets.only(left: 8),
+                                                child: Icon(
+                                                  Icons.remove_red_eye,
+                                                  color: Colors.black54,
+                                                  size: 18,
+                                                ),
+                                              ),
+                                          ],
+                                        ),
                                       ),
                                     ),
-
-                                    SizedBox(height: 40 * scale),
-                                  ],
-                                ),
+                                  );
+                                },
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              "Pregunta ${currentIndex + 1} / ${widget.totalQuestions}",
+                              style: TextStyle(
+                                fontFamily: "VT323",
+                                fontSize: isSmall ? 20 : 24,
+                                color: Colors.white70,
                               ),
                             ),
                           ],
                         ),
                       ),
-                    ],
-                  );
-                },
+                    ),
+                  ),
+                ),
               ),
-            ),
+            ],
           );
         },
       ),
     );
   }
+}
+
+// ----------------------------------------------------------
+// PINTOR DE NIEBLA ATERRADORA
+// ----------------------------------------------------------
+class _HorrorFogPainter extends CustomPainter {
+  final double progress;
+  final bool isBoss;
+
+  _HorrorFogPainter(this.progress, this.isBoss);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = (isBoss ? Colors.red : Colors.white).withOpacity(0.08)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 60);
+
+    for (int i = 0; i < 12; i++) {
+      final dx = math.sin(progress * 2 * math.pi + i * 0.5) * 200;
+      final dy = size.height * i / 12;
+      final rect = Rect.fromLTWH(dx, dy, size.width * 1.8, 160);
+      canvas.drawOval(rect, paint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
 }
 
 // ----------------------------------------------------------

@@ -9,14 +9,14 @@ class PowerUpEffects {
     required PowerUp powerUp,
     required Pregunta pregunta,
     required Function(String) setHint,
-    required Function hideOptions,
-    required Function addTime,
+    required Function(List<String>) hideSpecificOptions, // ← FIX
+    required Function(int) addExtraSeconds,
     required Function refreshCoins,
-    required Set<int> usedPowerUps,
+    required Set<String> usedPowerUps, // ← FIX también debe ser String
   }) async {
-
-    final int id = powerUp.id;     // TU POWERUP TIENE ID INT
-    final int cost = powerUp.price; // Y PRICE INT — PERFECTO
+    
+    final String id = powerUp.id; // ahora es String
+    final int cost = powerUp.price;
 
     // 1. Ya usado
     if (usedPowerUps.contains(id)) {
@@ -26,7 +26,7 @@ class PowerUpEffects {
       return;
     }
 
-    // 2. Suficientes monedas
+    // 2. Revisar monedas
     final progress = await ProgressManager.loadProgress();
     if (progress.coins < cost) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -35,36 +35,48 @@ class PowerUpEffects {
       return;
     }
 
-    // 3. Restar costo
+    // 3. Restar monedas
     await ProgressManager.addCoins(-cost);
     await refreshCoins();
 
-    // Registrar que ya se usó
     usedPowerUps.add(id);
 
-    // 4. Aplicar efecto
+    // 4. Aplicar efectos
     switch (id) {
-      case 1: // Clarividencia
+      case "clarividencia":
         setHint(pregunta.correcta);
         break;
 
-      case 2: // 50-50
-        hideOptions();
+      case "corte_mental":
+        final incorrectas = pregunta.opciones
+            .where((o) => o != pregunta.correcta)
+            .toList();
+
+        incorrectas.shuffle();
+        final remove = incorrectas.take(2).toList();
+
+        hideSpecificOptions(remove);
         break;
 
-      case 3: // Tiempo extra
-        addTime();
+      case "pulso_temporal":
+        addExtraSeconds(10);
         break;
 
-      case 4: // Refresh (monedas)
-        await refreshCoins();
+            case "sombra_cognitiva":
+        final incorrectas = pregunta.opciones
+            .where((o) => o != pregunta.correcta)
+            .toList();
+
+        incorrectas.shuffle();
+        final ocultar = incorrectas.take(1).toList(); // ✅ Solo oculta 1
+
+        hideSpecificOptions(ocultar);
         break;
 
       default:
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("Comodín no válido.")),
         );
-        break;
     }
   }
 }
