@@ -6,9 +6,7 @@ import '../hud_widget.dart';
 import '../comodines_screen.dart';
 import 'percepcion_quiz_screen.dart';
 import '../jefes_screen.dart';
-import '../purgatorio_screen.dart'; // ✅ AGREGAR ESTA LÍNEA
-
-// ...existing code...
+import '../purgatorio_screen.dart';
 
 class PercepcionMenuScreen extends StatefulWidget {
   const PercepcionMenuScreen({super.key});
@@ -22,7 +20,14 @@ class _PercepcionMenuScreenState extends State<PercepcionMenuScreen>
   late AnimationController _fogController;
 
   int coins = 0;
+  
+  // ✅ Variable para controlar el tiempo entre mensajes (Anti-Spam)
+  DateTime? _lastSnackTime;
 
+  // ✅ Variable para controlar el titileo del HUD
+  bool _showComodinesNotification = false;
+
+  // Inicializamos con el 1 desbloqueado por defecto
   Map<int, bool> unlocked = {1: true, 2: false};
   Map<int, bool> completed = {1: false, 2: false};
 
@@ -55,16 +60,22 @@ class _PercepcionMenuScreenState extends State<PercepcionMenuScreen>
 
     _loadCoins();
     _loadUnlocks();
+    _checkNotification(); // ✅ Revisar notificación al entrar
+  }
+
+  // ✅ Lógica de notificación
+  Future<void> _checkNotification() async {
+    final hasNew = await ProgressManager.getBool("has_new_powerup") ?? false;
+    if (mounted) setState(() => _showComodinesNotification = hasNew);
   }
 
   Future<void> _loadUnlocks() async {
-    final u1 = await ProgressManager.isBlockUnlocked(1);
     final u2 = await ProgressManager.isBlockUnlocked(2);
     final c1 = await ProgressManager.isBlockCompleted(1);
     final c2 = await ProgressManager.isBlockCompleted(2);
 
     setState(() {
-      unlocked[1] = u1;
+      unlocked[1] = true; // ✅ Nivel 1 siempre abierto
       unlocked[2] = u2;
       completed[1] = c1;
       completed[2] = c2;
@@ -79,6 +90,34 @@ class _PercepcionMenuScreenState extends State<PercepcionMenuScreen>
   void _refreshCoins() async {
     final progress = await ProgressManager.loadProgress();
     setState(() => coins = progress.coins);
+  }
+
+  // ✅ FUNCIÓN SEGURA PARA MOSTRAR MENSAJES (Con 3 seg de espera)
+  void _showSafeSnackBar(String message, Color bgColor, Color textColor) {
+    final now = DateTime.now();
+    
+    if (_lastSnackTime != null && 
+        now.difference(_lastSnackTime!) < const Duration(seconds: 3)) {
+      return; 
+    }
+
+    _lastSnackTime = now; 
+    ScaffoldMessenger.of(context).clearSnackBars();
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        backgroundColor: bgColor,
+        duration: const Duration(seconds: 2),
+        content: Text(
+          message,
+          style: TextStyle(
+            fontFamily: 'PressStart2P',
+            fontSize: 10,
+            color: textColor,
+          ),
+        ),
+      ),
+    );
   }
 
   @override
@@ -96,7 +135,7 @@ class _PercepcionMenuScreenState extends State<PercepcionMenuScreen>
       backgroundColor: const Color(0xFF0B0F14),
       body: Stack(
         children: [
-          // Niebla animada mejorada
+          // Niebla animada
           AnimatedBuilder(
             animation: _fogController,
             builder: (context, _) => CustomPaint(
@@ -109,25 +148,31 @@ class _PercepcionMenuScreenState extends State<PercepcionMenuScreen>
             child: Column(
               children: [
                 const SizedBox(height: 10),
+                
+                // ✅ HUD ACTUALIZADO
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: GameHUD(
                     coins: coins,
+                    showNotification: _showComodinesNotification, // ✅ Activar titileo
                     onOpenComodines: () => Navigator.push(
                       context,
                       MaterialPageRoute(
                           builder: (_) => const ComodinesScreen()),
-                    ).then((_) => _refreshCoins()),
+                    ).then((_) {
+                      _refreshCoins();
+                      _checkNotification(); // Se apaga al volver
+                    }),
                     onOpenJefes: () => Navigator.push(
                       context,
-                     MaterialPageRoute(builder: (_) => const JefesScreen()), // ✅ NO CodiceScreen()
-                    ),
+                      MaterialPageRoute(builder: (_) => const JefesScreen()),
+                    ).then((_) => _refreshCoins()),
                   ),
                 ),
 
                 const SizedBox(height: 28),
 
-                // Título más grande y visible
+                // Título
                 Text(
                   "PERCEPCIÓN",
                   style: TextStyle(
@@ -175,39 +220,27 @@ class _PercepcionMenuScreenState extends State<PercepcionMenuScreen>
                         isCompleted: isCompleted,
                         bossName: block["bossName"],
                         onTap: () {
-                          if (!isUnlocked) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                backgroundColor: Colors.redAccent,
-                                content: Text(
-                                  "Completa el bloque anterior",
-                                  style: TextStyle(
-                                    fontFamily: 'PressStart2P',
-                                    fontSize: 10,
-                                  ),
-                                ),
-                              ),
-                            );
-                            return;
-                          }
-
+                          // 1. VERIFICAR SI ESTÁ COMPLETADO
                           if (isCompleted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                backgroundColor: Colors.greenAccent,
-                                content: Text(
-                                  "Ya completaste este bloque",
-                                  style: TextStyle(
-                                    fontFamily: 'PressStart2P',
-                                    fontSize: 10,
-                                    color: Colors.black,
-                                  ),
-                                ),
-                              ),
+                            _showSafeSnackBar(
+                              "¡Ya completaste este bloque!",
+                              const Color(0xFF69F0AE),
+                              Colors.black,
+                            );
+                            return; 
+                          }
+
+                          // 2. VERIFICAR SI ESTÁ BLOQUEADO
+                          if (id != 1 && !isUnlocked) {
+                            _showSafeSnackBar(
+                              "Completa el bloque anterior",
+                              Colors.redAccent,
+                              Colors.white,
                             );
                             return;
                           }
 
+                          // 3. SI TODO ESTÁ BIEN, NAVEGAR
                           Navigator.push(
                             context,
                             MaterialPageRoute(
@@ -220,6 +253,7 @@ class _PercepcionMenuScreenState extends State<PercepcionMenuScreen>
                           ).then((_) {
                             _loadCoins();
                             _loadUnlocks();
+                            _checkNotification(); // ✅ Revisar si ganó al jefe
                           });
                         },
                       );
@@ -232,7 +266,7 @@ class _PercepcionMenuScreenState extends State<PercepcionMenuScreen>
             ),
           ),
 
-          // Botón de regreso mejorado
+          // Botón Volver
           Positioned(
             left: 20,
             bottom: 20,
@@ -293,7 +327,7 @@ class _PercepcionMenuScreenState extends State<PercepcionMenuScreen>
 }
 
 // ----------------------------------------------------------
-// TARJETA DE BLOQUE MEJORADA
+// TARJETA DE BLOQUE (CORREGIDA: SIN NEÓN AL COMPLETAR)
 // ----------------------------------------------------------
 class _SilentBlockCard extends StatefulWidget {
   final String title;
@@ -343,11 +377,12 @@ class _SilentBlockCardState extends State<_SilentBlockCard>
   Widget build(BuildContext context) {
     final isSmall = MediaQuery.of(context).size.width < 500;
 
+    // ✅ LÓGICA DE COLOR
     Color displayColor;
-    if (!widget.isUnlocked) {
+    if (widget.isCompleted) {
+      displayColor = const Color(0xFF69F0AE); // Verde
+    } else if (!widget.isUnlocked) {
       displayColor = Colors.grey.shade700;
-    } else if (widget.isCompleted) {
-      displayColor = Colors.greenAccent;
     } else {
       displayColor = widget.color;
     }
@@ -355,9 +390,10 @@ class _SilentBlockCardState extends State<_SilentBlockCard>
     return AnimatedBuilder(
       animation: _pulseController,
       builder: (context, child) {
-        final pulseOpacity = widget.isUnlocked && !widget.isCompleted
+        // ✅ Solo pulsa si está desbloqueado Y NO completado.
+        final pulseOpacity = (widget.isUnlocked && !widget.isCompleted)
             ? 0.3 + (_pulseController.value * 0.3)
-            : 0.2;
+            : 0.0;
 
         return GestureDetector(
           onTap: widget.onTap,
@@ -373,6 +409,7 @@ class _SilentBlockCardState extends State<_SilentBlockCard>
                 width: widget.isUnlocked ? 3 : 2,
               ),
               boxShadow: [
+                // ✅ Sin sombra neon si está completado
                 if (widget.isUnlocked && !widget.isCompleted)
                   BoxShadow(
                     color: displayColor.withOpacity(pulseOpacity),
@@ -382,65 +419,82 @@ class _SilentBlockCardState extends State<_SilentBlockCard>
               ],
             ),
             child: Padding(
-              padding: EdgeInsets.all(isSmall ? 20 : 26),
+              padding: EdgeInsets.symmetric(
+                  vertical: isSmall ? 8 : 12, horizontal: isSmall ? 16 : 20),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   Icon(
                     widget.isBoss ? Icons.flash_on : Icons.remove_red_eye,
                     color: displayColor,
-                    size: isSmall ? 55 : 65,
+                    size: isSmall ? 45 : 55,
                   ),
-                  const SizedBox(height: 16),
-                  Text(
-                    widget.title,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontFamily: 'PressStart2P',
-                      color: displayColor,
-                      fontSize: isSmall ? 14 : 16,
-                      letterSpacing: 1.5,
+                  const SizedBox(height: 8),
+                  
+                  // TÍTULO
+                  FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      widget.title,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontFamily: 'PressStart2P',
+                        color: displayColor,
+                        fontSize: isSmall ? 12 : 14,
+                        letterSpacing: 1.5,
+                      ),
                     ),
                   ),
+
                   if (widget.bossName != null)
                     Padding(
-                      padding: const EdgeInsets.only(top: 10),
-                      child: Text(
-                        widget.bossName!,
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontFamily: 'VT323',
-                          color: Colors.white70,
-                          fontSize: isSmall ? 22 : 26,
+                      padding: const EdgeInsets.only(top: 6),
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Text(
+                          widget.bossName!,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontFamily: 'VT323',
+                            color: Colors.white70,
+                            fontSize: isSmall ? 18 : 22,
+                          ),
                         ),
                       ),
                     ),
-                  const SizedBox(height: 14),
+
+                  const SizedBox(height: 8), 
+                  
+                  // CANTIDAD PREGUNTAS
                   Text(
                     "${widget.questions} preguntas",
                     style: TextStyle(
                       fontFamily: 'VT323',
                       color: Colors.white,
-                      fontSize: isSmall ? 24 : 28,
+                      fontSize: isSmall ? 20 : 24,
                     ),
                   ),
-                  const SizedBox(height: 12),
-                  if (!widget.isUnlocked)
-                    const Text(
-                      "🔒 BLOQUEADO",
-                      style: TextStyle(
-                        fontFamily: 'PressStart2P',
-                        fontSize: 10,
-                        color: Colors.redAccent,
-                      ),
-                    ),
+                  
+                  const SizedBox(height: 8),
+                  
+                  // ESTADO
                   if (widget.isCompleted)
                     const Text(
                       "✅ COMPLETADO",
                       style: TextStyle(
                         fontFamily: 'PressStart2P',
-                        fontSize: 10,
-                        color: Colors.greenAccent,
+                        fontSize: 9,
+                        color: Color(0xFF69F0AE),
+                      ),
+                    )
+                  else if (!widget.isUnlocked)
+                    const Text(
+                      "🔒 BLOQUEADO",
+                      style: TextStyle(
+                        fontFamily: 'PressStart2P',
+                        fontSize: 9,
+                        color: Colors.redAccent,
                       ),
                     ),
                 ],
@@ -454,7 +508,7 @@ class _SilentBlockCardState extends State<_SilentBlockCard>
 }
 
 // ----------------------------------------------------------
-// PINTOR DE NIEBLA MEJORADO
+// PINTOR DE NIEBLA
 // ----------------------------------------------------------
 class _FogPainter extends CustomPainter {
   final double progress;

@@ -2,15 +2,11 @@ import 'package:flutter/material.dart';
 import 'dart:math' as math;
 
 import '../data/progress_manager.dart';
-// ...existing code...
-
-import '../comodines_screen.dart'; // ✅ CAMBIAR: /comodines_screen.dart por ../comodines_screen.dart
+import '../comodines_screen.dart';
 import '../hud_widget.dart';
 import '../jefes_screen.dart'; 
-import '../purgatorio_screen.dart'; // ✅ CAMBIAR: /purgatorio_screen.dart por ../purgatorio_screen.dart
+import '../purgatorio_screen.dart';
 import 'logica_quiz_screen.dart';
-
-// ...existing code...
 
 class LogicaMenuScreen extends StatefulWidget {
   const LogicaMenuScreen({super.key});
@@ -25,6 +21,12 @@ class _LogicaMenuScreenState extends State<LogicaMenuScreen>
   late AnimationController _particleController;
 
   int coins = 0;
+  
+  // ✅ Variable Anti-Spam para logs (3 segundos)
+  DateTime? _lastSnackTime;
+  
+  // ✅ Variable para el titileo del HUD
+  bool _showComodinesNotification = false;
 
   Map<int, bool> unlocked = {1: true, 2: false, 3: false};
   Map<int, bool> completed = {1: false, 2: false, 3: false};
@@ -36,7 +38,7 @@ class _LogicaMenuScreenState extends State<LogicaMenuScreen>
       "difficulty": "Fácil",
       "questions": 5,
       "isBoss": false,
-      "color": Color(0xFF5A9FD4),
+      "color": Color(0xFF5A9FD4), // Azul Lógica
       "bossName": null,
     },
     {
@@ -45,16 +47,16 @@ class _LogicaMenuScreenState extends State<LogicaMenuScreen>
       "difficulty": "Medio",
       "questions": 5,
       "isBoss": false,
-      "color": Color(0xFF7FA8C9),
+      "color": Color(0xFF7FA8C9), // Azul Grisáceo
       "bossName": null,
     },
     {
       "id": 3,
-      "title": "Bloque 3 (Jefe)",
+      "title": "Bloque 3", // (Jefe)
       "difficulty": "Difícil",
       "questions": 10,
       "isBoss": true,
-      "color": Color(0xFFD47A7A),
+      "color": Color(0xFFD47A7A), // Rojo Deslavado
       "bossName": "El Rompecódigos",
     },
   ];
@@ -65,19 +67,31 @@ class _LogicaMenuScreenState extends State<LogicaMenuScreen>
 
     _gridController = AnimationController(
       vsync: this,
-      duration: Duration(seconds: 8),
+      duration: const Duration(seconds: 8),
     )..repeat();
 
     _particleController = AnimationController(
       vsync: this,
-      duration: Duration(seconds: 12),
+      duration: const Duration(seconds: 12),
     )..repeat();
 
     _loadCoins();
     _loadUnlocks();
+    _checkNotification(); // ✅ Verificamos si debe titilar al entrar
+  }
+
+  // ✅ Función para checar notificación
+  Future<void> _checkNotification() async {
+    final hasNew = await ProgressManager.getBool("has_new_powerup") ?? false;
+    if (mounted) setState(() => _showComodinesNotification = hasNew);
   }
 
   Future<void> _loadCoins() async {
+    final progress = await ProgressManager.loadProgress();
+    setState(() => coins = progress.coins);
+  }
+
+  void _refreshCoins() async {
     final progress = await ProgressManager.loadProgress();
     setState(() => coins = progress.coins);
   }
@@ -92,7 +106,7 @@ class _LogicaMenuScreenState extends State<LogicaMenuScreen>
     final c3 = await ProgressManager.isLogicBlockCompleted(3);
 
     setState(() {
-      unlocked[1] = u1;
+      unlocked[1] = true; // ✅ FORZADO: Nivel 1 siempre abierto
       unlocked[2] = u2;
       unlocked[3] = u3;
 
@@ -100,6 +114,34 @@ class _LogicaMenuScreenState extends State<LogicaMenuScreen>
       completed[2] = c2;
       completed[3] = c3;
     });
+  }
+
+  // ✅ FUNCIÓN SEGURA PARA MOSTRAR MENSAJES (3 seg de espera)
+  void _showSafeSnackBar(String message, Color bgColor, Color textColor) {
+    final now = DateTime.now();
+    
+    if (_lastSnackTime != null && 
+        now.difference(_lastSnackTime!) < const Duration(seconds: 3)) {
+      return; 
+    }
+
+    _lastSnackTime = now; 
+    ScaffoldMessenger.of(context).clearSnackBars();
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        backgroundColor: bgColor,
+        duration: const Duration(seconds: 2),
+        content: Text(
+          message,
+          style: TextStyle(
+            fontFamily: 'PressStart2P',
+            fontSize: 10,
+            color: textColor,
+          ),
+        ),
+      ),
+    );
   }
 
   @override
@@ -141,20 +183,24 @@ class _LogicaMenuScreenState extends State<LogicaMenuScreen>
               children: [
                 const SizedBox(height: 10),
 
-                // HUD
+                // ✅ HUD ACTUALIZADO
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: GameHUD(
                     coins: coins,
+                    showNotification: _showComodinesNotification, // ✅ Pasar estado
                     onOpenComodines: () => Navigator.push(
                       context,
                       MaterialPageRoute(
                           builder: (_) => const ComodinesScreen()),
-                    ).then((_) => _loadCoins()),
+                    ).then((_) {
+                      _refreshCoins();
+                      _checkNotification(); // Recargar estado (debería apagarse)
+                    }),
                     onOpenJefes: () => Navigator.push(
                       context,
                       MaterialPageRoute(builder: (_) => const JefesScreen()),
-                    ),
+                    ).then((_) => _refreshCoins()), // Refrescar al volver
                   ),
                 ),
 
@@ -200,7 +246,7 @@ class _LogicaMenuScreenState extends State<LogicaMenuScreen>
                       final bool isUnlocked = unlocked[id] ?? false;
                       final bool isCompleted = completed[id] ?? false;
 
-                      return _FuturisticBlockCard(
+                      return _LogicBlockCard(
                         title: block["title"],
                         difficulty: block["difficulty"],
                         questions: block["questions"],
@@ -210,39 +256,27 @@ class _LogicaMenuScreenState extends State<LogicaMenuScreen>
                         isUnlocked: isUnlocked,
                         isCompleted: isCompleted,
                         onTap: () {
-                          if (!isUnlocked) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                backgroundColor: Colors.redAccent,
-                                content: Text(
-                                  "Completa el bloque anterior",
-                                  style: TextStyle(
-                                    fontFamily: 'PressStart2P',
-                                    fontSize: 10,
-                                  ),
-                                ),
-                              ),
-                            );
-                            return;
-                          }
-
+                          // 1. CHEQUEO DE COMPLETADO
                           if (isCompleted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                backgroundColor: Colors.greenAccent,
-                                content: Text(
-                                  "Ya completaste este bloque",
-                                  style: TextStyle(
-                                    fontFamily: 'PressStart2P',
-                                    fontSize: 10,
-                                    color: Colors.black,
-                                  ),
-                                ),
-                              ),
+                            _showSafeSnackBar(
+                              "¡Ya completaste este bloque!",
+                              const Color(0xFF69F0AE),
+                              Colors.black,
                             );
                             return;
                           }
 
+                          // 2. CHEQUEO DE BLOQUEO
+                          if (id != 1 && !isUnlocked) {
+                            _showSafeSnackBar(
+                              "Completa el bloque anterior",
+                              Colors.redAccent,
+                              Colors.white,
+                            );
+                            return;
+                          }
+
+                          // 3. NAVEGACIÓN (con callback de retorno)
                           Navigator.push(
                             context,
                             MaterialPageRoute(
@@ -253,8 +287,9 @@ class _LogicaMenuScreenState extends State<LogicaMenuScreen>
                               ),
                             ),
                           ).then((_) {
-                            _loadCoins();
+                            _refreshCoins();
                             _loadUnlocks();
+                            _checkNotification(); // Revisar si desbloqueó comodín
                           });
                         },
                       );
@@ -267,7 +302,7 @@ class _LogicaMenuScreenState extends State<LogicaMenuScreen>
             ),
           ),
 
-          // BOTÓN DE REGRESO FUTURISTA
+          // BOTÓN DE REGRESO
           Positioned(
             left: 20,
             bottom: 20,
@@ -328,9 +363,9 @@ class _LogicaMenuScreenState extends State<LogicaMenuScreen>
 }
 
 // ----------------------------------------------------------
-// TARJETA DE BLOQUE FUTURISTA
+// TARJETA DE BLOQUE (DISEÑO UNIFICADO CON PERCEPCIÓN)
 // ----------------------------------------------------------
-class _FuturisticBlockCard extends StatefulWidget {
+class _LogicBlockCard extends StatefulWidget {
   final String title;
   final String difficulty;
   final int questions;
@@ -341,7 +376,7 @@ class _FuturisticBlockCard extends StatefulWidget {
   final bool isCompleted;
   final VoidCallback onTap;
 
-  const _FuturisticBlockCard({
+  const _LogicBlockCard({
     required this.title,
     required this.difficulty,
     required this.questions,
@@ -354,10 +389,10 @@ class _FuturisticBlockCard extends StatefulWidget {
   });
 
   @override
-  State<_FuturisticBlockCard> createState() => _FuturisticBlockCardState();
+  State<_LogicBlockCard> createState() => _LogicBlockCardState();
 }
 
-class _FuturisticBlockCardState extends State<_FuturisticBlockCard>
+class _LogicBlockCardState extends State<_LogicBlockCard>
     with SingleTickerProviderStateMixin {
   late AnimationController _pulseController;
 
@@ -380,11 +415,12 @@ class _FuturisticBlockCardState extends State<_FuturisticBlockCard>
   Widget build(BuildContext context) {
     final isSmall = MediaQuery.of(context).size.width < 500;
 
+    // ✅ LÓGICA DE COLOR (Igual que Percepción)
     Color displayColor;
-    if (!widget.isUnlocked) {
+    if (widget.isCompleted) {
+      displayColor = const Color(0xFF69F0AE); // Verde Neón Mate
+    } else if (!widget.isUnlocked) {
       displayColor = Colors.grey.shade700;
-    } else if (widget.isCompleted) {
-      displayColor = Colors.greenAccent;
     } else {
       displayColor = widget.color;
     }
@@ -392,101 +428,127 @@ class _FuturisticBlockCardState extends State<_FuturisticBlockCard>
     return AnimatedBuilder(
       animation: _pulseController,
       builder: (context, child) {
-        final pulseOpacity = widget.isUnlocked && !widget.isCompleted
+        // Solo pulsa si está desbloqueado Y NO completado
+        final pulseOpacity = (widget.isUnlocked && !widget.isCompleted)
             ? 0.3 + (_pulseController.value * 0.3)
-            : 0.2;
+            : 0.0;
 
         return GestureDetector(
           onTap: widget.onTap,
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 300),
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(24),
+              // ✅ Borde Redondeado 32
+              borderRadius: BorderRadius.circular(32),
               color: const Color(0xFF0F1420).withOpacity(
-                widget.isUnlocked ? 0.9 : 0.5,
+                widget.isUnlocked ? 0.9 : 0.6,
               ),
               border: Border.all(
                 color: displayColor,
                 width: widget.isUnlocked ? 3 : 2,
               ),
               boxShadow: [
+                // ✅ Sombra Neón controlada
                 if (widget.isUnlocked && !widget.isCompleted)
                   BoxShadow(
                     color: displayColor.withOpacity(pulseOpacity),
-                    blurRadius: 30,
-                    spreadRadius: 3,
+                    blurRadius: 12,
+                    spreadRadius: 0,
                   ),
               ],
             ),
             child: Padding(
-              padding: EdgeInsets.all(isSmall ? 20 : 26),
+              // ✅ Padding ajustado
+              padding: EdgeInsets.symmetric(
+                  vertical: isSmall ? 8 : 12, horizontal: isSmall ? 16 : 20),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   Icon(
                     widget.isBoss ? Icons.extension : Icons.settings,
                     color: displayColor,
-                    size: isSmall ? 55 : 65,
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    widget.title,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontFamily: 'PressStart2P',
-                      color: displayColor,
-                      fontSize: isSmall ? 14 : 16,
-                      letterSpacing: 1.5,
-                    ),
+                    size: isSmall ? 45 : 55,
                   ),
                   const SizedBox(height: 8),
-                  Text(
-                    widget.difficulty,
-                    style: TextStyle(
-                      fontFamily: 'VT323',
-                      color: Colors.white70,
-                      fontSize: isSmall ? 22 : 26,
+                  
+                  // TÍTULO
+                  FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      widget.title,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontFamily: 'PressStart2P',
+                        color: displayColor,
+                        fontSize: isSmall ? 12 : 14,
+                        letterSpacing: 1.5,
+                      ),
                     ),
                   ),
+
+                  const SizedBox(height: 6),
+
+                  // DIFICULTAD
+                  if (!widget.isBoss || widget.bossName == null)
+                    Text(
+                      widget.difficulty,
+                      style: TextStyle(
+                        fontFamily: 'VT323',
+                        color: Colors.white70,
+                        fontSize: isSmall ? 18 : 22,
+                      ),
+                    ),
+
+                  // JEFE NOMBRE
                   if (widget.bossName != null)
                     Padding(
-                      padding: const EdgeInsets.only(top: 10),
-                      child: Text(
-                        widget.bossName!,
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontFamily: 'VT323',
-                          color: Colors.redAccent.shade100,
-                          fontSize: isSmall ? 20 : 24,
+                      padding: const EdgeInsets.only(top: 4),
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Text(
+                          widget.bossName!,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontFamily: 'VT323',
+                            color: Colors.white,
+                            fontSize: isSmall ? 18 : 22,
+                          ),
                         ),
                       ),
                     ),
-                  const SizedBox(height: 14),
+
+                  const SizedBox(height: 6),
+                  
+                  // PREGUNTAS
                   Text(
                     "${widget.questions} preguntas",
                     style: TextStyle(
                       fontFamily: 'VT323',
-                      color: Colors.white,
-                      fontSize: isSmall ? 24 : 28,
+                      color: Colors.white60,
+                      fontSize: isSmall ? 18 : 20,
                     ),
                   ),
-                  const SizedBox(height: 12),
-                  if (!widget.isUnlocked)
-                    const Text(
-                      "🔒 BLOQUEADO",
-                      style: TextStyle(
-                        fontFamily: 'PressStart2P',
-                        fontSize: 10,
-                        color: Colors.redAccent,
-                      ),
-                    ),
+                  
+                  const SizedBox(height: 8),
+                  
+                  // ESTADO
                   if (widget.isCompleted)
                     const Text(
                       "✅ COMPLETADO",
                       style: TextStyle(
                         fontFamily: 'PressStart2P',
-                        fontSize: 10,
-                        color: Colors.greenAccent,
+                        fontSize: 9,
+                        color: Color(0xFF69F0AE),
+                      ),
+                    )
+                  else if (!widget.isUnlocked)
+                    const Text(
+                      "🔒 BLOQUEADO",
+                      style: TextStyle(
+                        fontFamily: 'PressStart2P',
+                        fontSize: 9,
+                        color: Colors.redAccent,
                       ),
                     ),
                 ],
@@ -500,7 +562,7 @@ class _FuturisticBlockCardState extends State<_FuturisticBlockCard>
 }
 
 // ----------------------------------------------------------
-// PINTOR DE GRID FUTURISTA
+// PAINTERS
 // ----------------------------------------------------------
 class _FuturisticGridPainter extends CustomPainter {
   final double progress;
@@ -512,7 +574,6 @@ class _FuturisticGridPainter extends CustomPainter {
       ..color = const Color(0xFF5A9FD4).withOpacity(0.08)
       ..strokeWidth = 1.5;
 
-    // Líneas horizontales
     for (double y = 0; y < size.height; y += 35) {
       final offset = math.sin(progress * 2 * math.pi + y / 50) * 8;
       canvas.drawLine(
@@ -522,7 +583,6 @@ class _FuturisticGridPainter extends CustomPainter {
       );
     }
 
-    // Líneas verticales
     for (double x = 0; x < size.width; x += 35) {
       final offset = math.cos(progress * 2 * math.pi + x / 50) * 8;
       canvas.drawLine(
@@ -537,9 +597,6 @@ class _FuturisticGridPainter extends CustomPainter {
   bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
 }
 
-// ----------------------------------------------------------
-// PINTOR DE PARTÍCULAS
-// ----------------------------------------------------------
 class _ParticlePainter extends CustomPainter {
   final double progress;
   _ParticlePainter(this.progress);

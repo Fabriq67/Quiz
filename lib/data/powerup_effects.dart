@@ -4,18 +4,38 @@ import '../data/progress_manager.dart';
 import '../models/pregunta_model.dart';
 
 class PowerUpEffects {
+  // ✅ Variable para controlar el tiempo (Anti-Spam de 3 segundos)
+  static DateTime? _lastActionTime;
+
   static Future<void> apply({
     required BuildContext context,
     required PowerUp powerUp,
     required Pregunta pregunta,
     required Function(String) setHint,
-    required Function(List<String>) hideSpecificOptions, // ← FIX
+    required Function(List<String>) hideSpecificOptions,
     required Function(int) addExtraSeconds,
     required Function refreshCoins,
-    required Set<String> usedPowerUps, // ← FIX también debe ser String
+    required Set<String> usedPowerUps,
   }) async {
     
-    final String id = powerUp.id; // ahora es String
+    // ---------------------------------------------------------
+    // ✅ 1. BLOQUEO DE TIEMPO (Debounce de 3 Segundos)
+    // ---------------------------------------------------------
+    final now = DateTime.now();
+    if (_lastActionTime != null && 
+        now.difference(_lastActionTime!) < const Duration(seconds: 3)) {
+      return; // ⛔ Si pasaron menos de 3 seg, ignoramos el toque.
+    }
+    _lastActionTime = now; // Guardamos el momento de este toque
+
+    // Limpiamos mensajes viejos para que no se acumulen
+    ScaffoldMessenger.of(context).clearSnackBars(); 
+
+    // ---------------------------------------------------------
+    // LÓGICA ORIGINAL (INTACTA)
+    // ---------------------------------------------------------
+    
+    final String id = powerUp.id;
     final int cost = powerUp.price;
 
     // 1. Ya usado
@@ -62,7 +82,7 @@ class PowerUpEffects {
         addExtraSeconds(10);
         break;
 
-            case "sombra_cognitiva":
+      case "sombra_cognitiva":
         final incorrectas = pregunta.opciones
             .where((o) => o != pregunta.correcta)
             .toList();

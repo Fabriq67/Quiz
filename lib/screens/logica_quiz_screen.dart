@@ -2,10 +2,6 @@
 //   LÓGICA — QUIZ SCREEN (VERSIÓN FUTURISTA MEJORADA)
 //   Cada bloque tiene su propio tema visual futurista
 //   Jefe: Reloj cibernético imponente
-//   BUGS CORREGIDOS:
-//   - Comodines no cobran doble
-//   - Jefe termina en pregunta 10, no en 9
-//   - Constructor recibe blockId y totalQuestions correctamente
 // ----------------------------------------------------------
 
 import 'dart:async';
@@ -72,7 +68,7 @@ class _LogicaQuizScreenState extends State<LogicaQuizScreen>
         : widget.blockId == 2
             ? 35
             : isBossFight
-                ? 15
+                ? 25
                 : 25;
 
     futurePreguntas = LogicaService.obtenerPreguntasBloque(widget.blockId);
@@ -213,10 +209,9 @@ class _LogicaQuizScreenState extends State<LogicaQuizScreen>
     } else if (widget.blockId == 2) {
       timeRemaining = 35;
     } else {
-      timeRemaining = isBossFight ? 15 : 25;
+      timeRemaining = isBossFight ? 25 : 25;
     }
 
-    // FIX: Incrementar PRIMERO, luego verificar
     currentIndex++;
 
     if (currentIndex >= widget.totalQuestions) {
@@ -307,6 +302,8 @@ class _LogicaQuizScreenState extends State<LogicaQuizScreen>
     // ✅ DESBLOQUEAR COMODÍN AL DERROTAR JEFE DE LÓGICA
     if (isBossFight) {
       await ProgressManager.defeatBoss("boss_logica");
+      // 👇👇👇 AÑADIDO: Activa la notificación para el HUD 👇👇👇
+      await ProgressManager.saveBool("has_new_powerup", true);
     }
 
     final monedasGanadas = calcularMonedas();
@@ -493,7 +490,7 @@ class _LogicaQuizScreenState extends State<LogicaQuizScreen>
 
                           const SizedBox(height: 12),
 
-                          // COMODINES
+                          // ✅ BOTONES DE COMODINES CON PRECIO Y DISEÑO
                           if (equipped.isNotEmpty)
                             Wrap(
                               spacing: 10,
@@ -502,16 +499,16 @@ class _LogicaQuizScreenState extends State<LogicaQuizScreen>
                               children: equipped.map((p) {
                                 final usado = usedPowerups.contains(p.id);
                                 final label =
-                                    (p.name.isNotEmpty) ? p.name : p.id ?? "?";
+                                    (p.name.isNotEmpty) ? p.name : p.id;
                                 return ElevatedButton(
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: usado
                                         ? Colors.grey
-                                        : const Color(0xFF0F1420),
+                                        : const Color.fromARGB(255, 100, 2, 125),
                                     foregroundColor: _getThemeColor(),
                                     padding: EdgeInsets.symmetric(
-                                      vertical: isSmall ? 8 : 10,
-                                      horizontal: isSmall ? 10 : 12,
+                                      vertical: isSmall ? 9 : 11,
+                                      horizontal: isSmall ? 15 : 16,
                                     ),
                                   ),
                                   onPressed: (usado || answerChecked)
@@ -521,27 +518,57 @@ class _LogicaQuizScreenState extends State<LogicaQuizScreen>
                                             context: context,
                                             powerUp: p,
                                             pregunta: pregunta,
-                                            setHint: (h) => setState(
-                                                () => hintedOption = h),
+                                            setHint: (h) =>
+                                                setState(() => hintedOption = h),
                                             hideSpecificOptions: (ops) =>
-                                                setState(() =>
-                                                    opcionesOcultas
-                                                        .addAll(ops)),
+                                                setState(() => opcionesOcultas
+                                                    .addAll(ops)),
                                             addExtraSeconds: (s) => setState(
                                                 () => timeRemaining += s),
                                             refreshCoins: _loadCoins,
                                             usedPowerUps: usedPowerups,
                                           );
-
-                                          usedPowerups.add(p.id);
                                           if (mounted) setState(() {});
                                         },
-                                  child: Text(
-                                    label,
-                                    style: TextStyle(
-                                      fontFamily: 'PressStart2P',
-                                      fontSize: isSmall ? 9 : 10,
-                                    ),
+                                  // ✅ CAMBIO AQUI: Contenido del Botón con Precio
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      // Nombre
+                                      Text(
+                                        label,
+                                        textAlign: TextAlign.center,
+                                        style: TextStyle(
+                                          fontFamily: 'PressStart2P',
+                                          fontSize: isSmall ? 12 : 13,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      // Precio con Icono
+                                      Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Icon(
+                                            Icons.stars_rounded, // Icono Moneda
+                                            size: 17,
+                                            color: usado
+                                                ? Colors.white38
+                                                : const Color(0xFFFFD700),
+                                          ),
+                                          const SizedBox(width: 4),
+                                          Text(
+                                            "${p.price}",
+                                            style: TextStyle(
+                                              fontFamily: 'PressStart2P',
+                                              fontSize: 16,
+                                              color: usado
+                                                  ? Colors.white38
+                                                  : const Color(0xFFFFD700),
+                                            ),
+                                          ),
+                                        ],
+                                      )
+                                    ],
                                   ),
                                 );
                               }).toList(),
@@ -641,8 +668,7 @@ class _LogicaQuizScreenState extends State<LogicaQuizScreen>
                                       ),
                                       decoration: BoxDecoration(
                                         color: getColor(pregunta, opcion),
-                                        borderRadius:
-                                            BorderRadius.circular(18),
+                                        borderRadius: BorderRadius.circular(18),
                                         boxShadow: answerChecked &&
                                                 opcion == selectedAnswer
                                             ? [
@@ -666,15 +692,14 @@ class _LogicaQuizScreenState extends State<LogicaQuizScreen>
                                               style: TextStyle(
                                                 fontFamily: "PressStart2P",
                                                 fontSize: isSmall ? 11 : 13,
-                                                color: Colors.white,
+                                                color: Colors.black,
                                               ),
                                               textAlign: TextAlign.center,
                                             ),
                                           ),
                                           if (opcion == hintedOption)
                                             const Padding(
-                                              padding:
-                                                  EdgeInsets.only(left: 8),
+                                              padding: EdgeInsets.only(left: 8),
                                               child: Icon(
                                                 Icons.lightbulb,
                                                 color: Colors.white70,

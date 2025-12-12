@@ -4,9 +4,9 @@ import 'dart:math' as math;
 import '../data/progress_manager.dart';
 import '../hud_widget.dart';
 import '../comodines_screen.dart';
-import '../jefes_screen.dart'; 
+import '../jefes_screen.dart';
 import 'ciencia_quiz_screen.dart';
-import '../purgatorio_screen.dart'; // ✅ CORREGIDO: Quitar la / inicial
+import '../purgatorio_screen.dart';
 
 class CienciaMenuScreen extends StatefulWidget {
   const CienciaMenuScreen({super.key});
@@ -17,9 +17,15 @@ class CienciaMenuScreen extends StatefulWidget {
 
 class _CienciaMenuScreenState extends State<CienciaMenuScreen>
     with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
+  late AnimationController _spaceController;
 
   int coins = 0;
+  
+  // ✅ Variable Anti-Spam para logs
+  DateTime? _lastSnackTime;
+
+  // ✅ Variable para notificación HUD (Titileo)
+  bool _showComodinesNotification = false;
 
   Map<int, bool> unlocked = {1: true, 2: false, 3: false};
   Map<int, bool> completed = {1: false, 2: false, 3: false};
@@ -31,7 +37,7 @@ class _CienciaMenuScreenState extends State<CienciaMenuScreen>
       "difficulty": "Fácil",
       "questions": 5,
       "isBoss": false,
-      "color": Color(0xFF32CD32),
+      "color": Color(0xFF32CD32), // Verde Lima Neón
       "bossName": null,
     },
     {
@@ -40,35 +46,46 @@ class _CienciaMenuScreenState extends State<CienciaMenuScreen>
       "difficulty": "Medio",
       "questions": 5,
       "isBoss": false,
-      "color": Color(0xFF26E6A3),
+      "color": Color(0xFF26E6A3), // Turquesa Neón
       "bossName": null,
     },
     {
       "id": 3,
-      "title": "Bloque 3 (Jefe)",
+      "title": "Bloque 3", // (Jefe)
       "difficulty": "Difícil",
       "questions": 10,
       "isBoss": true,
-      "color": Color(0xFFFF33A1),
-      "bossName": "El Guardián de la Memoria",
+      "color": Color(0xFFFF33A1), // Magenta Neón (Jefe)
+      "bossName": "El Guardián",
     },
   ];
 
   @override
   void initState() {
     super.initState();
-    debugPrint('[CienciaMenuScreen] initState');
 
-    _controller = AnimationController(
+    _spaceController = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 10),
     )..repeat();
 
     _loadCoins();
     _loadUnlocks();
+    _checkNotification(); // ✅ Revisar notificación al entrar
+  }
+
+  // ✅ Lógica de notificación: Lee si se desbloqueó un comodín
+  Future<void> _checkNotification() async {
+    final hasNew = await ProgressManager.getBool("has_new_powerup") ?? false;
+    if (mounted) setState(() => _showComodinesNotification = hasNew);
   }
 
   Future<void> _loadCoins() async {
+    final progress = await ProgressManager.loadProgress();
+    setState(() => coins = progress.coins);
+  }
+
+  void _refreshCoins() async {
     final progress = await ProgressManager.loadProgress();
     setState(() => coins = progress.coins);
   }
@@ -101,32 +118,54 @@ class _CienciaMenuScreenState extends State<CienciaMenuScreen>
     });
   }
 
-  void _refreshCoins() async {
-    final progress = await ProgressManager.loadProgress();
-    setState(() => coins = progress.coins);
+  // ✅ FUNCIÓN SEGURA PARA MOSTRAR MENSAJES (3 seg de espera)
+  void _showSafeSnackBar(String message, Color bgColor, Color textColor) {
+    final now = DateTime.now();
+    
+    if (_lastSnackTime != null && 
+        now.difference(_lastSnackTime!) < const Duration(seconds: 3)) {
+      return; 
+    }
+
+    _lastSnackTime = now; 
+    ScaffoldMessenger.of(context).clearSnackBars();
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        backgroundColor: bgColor,
+        duration: const Duration(seconds: 2),
+        content: Text(
+          message,
+          style: TextStyle(
+            fontFamily: 'PressStart2P',
+            fontSize: 10,
+            color: textColor,
+          ),
+        ),
+      ),
+    );
   }
 
   @override
   void dispose() {
-    _controller.dispose();
+    _spaceController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    debugPrint('[CienciaMenuScreen] build');
     final size = MediaQuery.of(context).size;
-    final width = size.width;
-    final isSmall = width < 450;
+    final isSmall = size.width < 500;
 
     return Scaffold(
       backgroundColor: const Color(0xFF060218),
       body: Stack(
         children: [
+          // FONDO ESPACIAL (Original de Ciencia)
           AnimatedBuilder(
-            animation: _controller,
+            animation: _spaceController,
             builder: (context, _) => CustomPaint(
-              painter: _ScienceSpacePainter(_controller.value),
+              painter: _ScienceSpacePainter(_spaceController.value),
               size: size,
             ),
           ),
@@ -136,116 +175,167 @@ class _CienciaMenuScreenState extends State<CienciaMenuScreen>
               children: [
                 const SizedBox(height: 10),
 
+                // ✅ HUD CON NOTIFICACIÓN
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: GameHUD(
                     coins: coins,
+                    showNotification: _showComodinesNotification, // ✅ Activa titileo
                     onOpenComodines: () => Navigator.push(
                       context,
                       MaterialPageRoute(builder: (_) => const ComodinesScreen()),
-                    ).then((_) => _refreshCoins()),
+                    ).then((_) {
+                      _refreshCoins();
+                      _checkNotification(); // Se apaga al volver
+                    }),
                     onOpenJefes: () => Navigator.push(
                       context,
                       MaterialPageRoute(builder: (_) => const JefesScreen()),
-                    ),
+                    ).then((_) => _refreshCoins()),
                   ),
                 ),
 
-                const SizedBox(height: 20),
+                const SizedBox(height: 24),
 
-                const Text(
-                  "CIENCIA Y TECNOLOGÍA",
+                Text(
+                  "CIENCIA",
                   style: TextStyle(
                     fontFamily: 'PressStart2P',
-                    color: Color(0xFF32CD32),
-                    fontSize: 15,
-                    letterSpacing: 2,
+                    color: const Color(0xFF32CD32),
+                    fontSize: isSmall ? 18 : 22,
+                    letterSpacing: 3,
+                    shadows: const [
+                      Shadow(blurRadius: 15, color: Color(0xFF32CD32)),
+                    ],
                   ),
-                  textAlign: TextAlign.center,
                 ),
 
-                const SizedBox(height: 25),
+                const SizedBox(height: 30),
 
                 Expanded(
                   child: GridView.builder(
-                    padding: const EdgeInsets.all(24),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: isSmall ? 18 : 28,
+                      vertical: 10,
+                    ),
                     gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: isSmall ? 1 : 2,
-                      crossAxisSpacing: 20,
-                      mainAxisSpacing: 20,
-                      childAspectRatio: isSmall ? 1.2 : 1.0,
+                      crossAxisSpacing: isSmall ? 18 : 26,
+                      mainAxisSpacing: isSmall ? 18 : 26,
+                      childAspectRatio: isSmall ? 1.4 : 1.2,
                     ),
                     itemCount: blocks.length,
                     itemBuilder: (context, index) {
-                      final b = blocks[index];
-                      final id = b["id"] as int;
+                      final block = blocks[index];
+                      final id = block["id"] as int;
 
-                      final isUnlocked = unlocked[id] ?? false;
-                      final isCompleted = completed[id] ?? false;
-                      final isPlayable = isUnlocked;
+                      final bool isUnlocked = unlocked[id] ?? false;
+                      final bool isCompleted = completed[id] ?? false;
 
-                      return _ScienceBlockCard(
-                        title: b["title"] as String,
-                        difficulty: b["difficulty"] as String,
-                        questions: b["questions"] as int,
-                        isBoss: b["isBoss"] as bool,
-                        color: b["color"] as Color,
-                        bossName: b["bossName"] as String?,
-                        locked: !isUnlocked,
-                        completed: isCompleted,
+                      return _ScienceNeonCard(
+                        title: block["title"],
+                        difficulty: block["difficulty"],
+                        questions: block["questions"],
+                        isBoss: block["isBoss"],
+                        color: block["color"],
+                        bossName: block["bossName"],
+                        isUnlocked: isUnlocked,
+                        isCompleted: isCompleted,
                         onTap: () {
-                          if (!isPlayable) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                backgroundColor: Colors.redAccent,
-                                content: const Text(
-                                  "Debes completar el bloque previo.",
-                                  style: TextStyle(color: Colors.white),
-                                ),
-                              ),
+                          if (isCompleted) {
+                            _showSafeSnackBar(
+                              "¡Ya completaste este bloque!",
+                              const Color(0xFF69F0AE),
+                              Colors.black,
                             );
                             return;
                           }
 
-                          if (isCompleted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                backgroundColor: Colors.greenAccent,
-                                content: const Text(
-                                  "Ya completado. ¡Bien hecho!",
-                                  style: TextStyle(color: Colors.black),
-                                ),
-                              ),
+                          if (id != 1 && !isUnlocked) {
+                            _showSafeSnackBar(
+                              "Completa el bloque anterior",
+                              Colors.redAccent,
+                              Colors.white,
                             );
                             return;
                           }
+
                           Navigator.push(
                             context,
                             MaterialPageRoute(
                               builder: (_) => CienciaQuizScreen(
                                 blockId: id,
-                                totalQuestions: b["questions"] as int,
-                                isBoss: b["isBoss"] as bool,
+                                totalQuestions: block["questions"],
+                                isBoss: block["isBoss"],
                               ),
                             ),
-                          ).then((_) => _loadUnlocks());
+                          ).then((_) {
+                            _refreshCoins();
+                            _loadUnlocks();
+                            _checkNotification(); // ✅ Revisar si ganó al jefe y encender HUD
+                          });
                         },
                       );
                     },
                   ),
                 ),
+
+                const SizedBox(height: 80),
               ],
             ),
           ),
-
+          
+          // BOTÓN DE REGRESO
           Positioned(
-            bottom: 20,
             left: 20,
-            child: _BackButton(
-              onTap: () => Navigator.pushAndRemoveUntil(
-                context,
-                MaterialPageRoute(builder: (_) => const PurgatorioScreen()),
-                (route) => false,
+            bottom: 20,
+            child: GestureDetector(
+              onTap: () {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (_) => const PurgatorioScreen()),
+                );
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 16,
+                ),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF060218),
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(
+                    color: const Color.fromARGB(255, 92, 159, 92),
+                    width: 2.5,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF32CD32).withOpacity(0.4),
+                      blurRadius: 16,
+                      spreadRadius: 2,
+                    ),
+                  ],
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: const [
+                    Icon(
+                      Icons.arrow_back_rounded,
+                      color: Color.fromARGB(255, 82, 183, 82),
+                      size: 28,
+                    ),
+                    SizedBox(width: 12),
+                    Text(
+                      "VOLVER",
+                      style: TextStyle(
+                        fontFamily: 'PressStart2P',
+                        fontSize: 13,
+                        color: Color.fromARGB(255, 83, 174, 83),
+                        letterSpacing: 1.5,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -255,30 +345,43 @@ class _CienciaMenuScreenState extends State<CienciaMenuScreen>
   }
 }
 
-class _BackButton extends StatefulWidget {
+// ----------------------------------------------------------
+// TARJETA DE BLOQUE (DISEÑO UNIFICADO NEON)
+// ----------------------------------------------------------
+class _ScienceNeonCard extends StatefulWidget {
+  final String title;
+  final String difficulty;
+  final int questions;
+  final bool isBoss;
+  final Color color;
+  final String? bossName;
+  final bool isUnlocked;
+  final bool isCompleted;
   final VoidCallback onTap;
 
-  const _BackButton({required this.onTap});
+  const _ScienceNeonCard({
+    required this.title,
+    required this.difficulty,
+    required this.questions,
+    required this.isBoss,
+    required this.color,
+    required this.isUnlocked,
+    required this.isCompleted,
+    required this.onTap,
+    this.bossName,
+  });
 
   @override
-  State<_BackButton> createState() => _BackButtonState();
+  State<_ScienceNeonCard> createState() => _ScienceNeonCardState();
 }
 
-class _BackButtonState extends State<_BackButton>
-    with TickerProviderStateMixin {
-
-  late AnimationController _scaleController;
+class _ScienceNeonCardState extends State<_ScienceNeonCard>
+    with SingleTickerProviderStateMixin {
   late AnimationController _pulseController;
-  bool _isHovered = false;
 
   @override
   void initState() {
     super.initState();
-    _scaleController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 200),
-    );
-
     _pulseController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1500),
@@ -287,224 +390,153 @@ class _BackButtonState extends State<_BackButton>
 
   @override
   void dispose() {
-    _scaleController.dispose();
     _pulseController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final size = MediaQuery.of(context).size;
-    final isMobile = size.width < 600;
-    final buttonSize = isMobile ? 60.0 : 70.0;
+    final isSmall = MediaQuery.of(context).size.width < 500;
 
-    return MouseRegion(
-      onEnter: (_) {
-        setState(() => _isHovered = true);
-        _scaleController.forward();
-      },
-      onExit: (_) {
-        setState(() => _isHovered = false);
-        _scaleController.reverse();
-      },
-      child: GestureDetector(
-        onTapDown: (_) => _scaleController.forward(),
-        onTapUp: (_) {
-          _scaleController.reverse();
-          widget.onTap();
-        },
-        onTapCancel: () => _scaleController.reverse(),
-        child: AnimatedBuilder(
-          animation: Listenable.merge([_scaleController, _pulseController]),
-          builder: (context, child) {
-            final scale = 1.0 + (_scaleController.value * 0.2);
-            final pulseScale = 1.0 + (_pulseController.value * 0.08);
-            final finalScale = scale * pulseScale;
+    Color displayColor;
+    if (widget.isCompleted) {
+      displayColor = const Color(0xFF69F0AE); // Verde Neón Mate
+    } else if (!widget.isUnlocked) {
+      displayColor = Colors.grey.shade700;
+    } else {
+      displayColor = widget.color;
+    }
 
-            return Transform.scale(
-              scale: finalScale,
-              child: Container(
-                width: buttonSize,
-                height: buttonSize,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: LinearGradient(
-                    colors: _isHovered
-                        ? [
-                            const Color(0xFF26E6A3).withValues(alpha: 0.9),
-                            const Color(0xFF1FD98F).withValues(alpha: 0.8),
-                          ]
-                        : [
-                            const Color(0xFF32CD32).withValues(alpha: 0.8),
-                            const Color(0xFF26E6A3).withValues(alpha: 0.7),
-                          ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFF26E6A3).withValues(
-                        alpha: _isHovered ? 0.8 : 0.5,
-                      ),
-                      blurRadius: _isHovered ? 25 : 15,
-                      spreadRadius: _isHovered ? 4 : 2,
-                    ),
-                  ],
-                  border: Border.all(
-                    color: Colors.white.withValues(
-                      alpha: _isHovered ? 0.9 : 0.5,
-                    ),
-                    width: 2,
-                  ),
-                ),
-                child: Center(
-                  child: Icon(
-                    Icons.arrow_back,
-                    color: Colors.black,
-                    size: isMobile ? 28 : 32,
-                  ),
-                ),
+    return AnimatedBuilder(
+      animation: _pulseController,
+      builder: (context, child) {
+        final pulseOpacity = (widget.isUnlocked && !widget.isCompleted)
+            ? 0.3 + (_pulseController.value * 0.3)
+            : 0.0;
+
+        return GestureDetector(
+          onTap: widget.onTap,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 300),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(32),
+              color: const Color(0xFF0B0525).withOpacity(
+                widget.isUnlocked ? 0.9 : 0.6,
               ),
-            );
-          },
-        ),
-      ),
-    );
-  }
-}
-
-class _ScienceBlockCard extends StatelessWidget {
-  final String title;
-  final String difficulty;
-  final int questions;
-  final bool isBoss;
-  final Color color;
-  final String? bossName;
-  final bool locked;
-  final bool completed;
-  final VoidCallback onTap;
-
-  const _ScienceBlockCard({
-    required this.title,
-    required this.difficulty,
-    required this.questions,
-    required this.isBoss,
-    required this.color,
-    required this.locked,
-    required this.completed,
-    required this.onTap,
-    this.bossName,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final isSmall = MediaQuery.of(context).size.width < 450;
-    final cardColor = locked ? Colors.grey : color;
-
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 200),
-      decoration: BoxDecoration(
-        color: const Color(0xFF0B0525).withValues(
-          alpha: locked ? 0.4 : (completed ? 0.7 : 0.95),
-        ),
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: cardColor, width: 2),
-        boxShadow: [
-          if (!locked)
-            BoxShadow(
-              color: cardColor.withValues(alpha: 0.7),
-              blurRadius: 20,
-              spreadRadius: 2,
+              border: Border.all(
+                color: displayColor,
+                width: widget.isUnlocked ? 3 : 2,
+              ),
+              boxShadow: [
+                if (widget.isUnlocked && !widget.isCompleted)
+                  BoxShadow(
+                    color: displayColor.withOpacity(pulseOpacity),
+                    blurRadius: 12,
+                    spreadRadius: 0,
+                  ),
+              ],
             ),
-        ],
-      ),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(22),
-        onTap: locked ? null : onTap,
-        child: Padding(
-          padding: EdgeInsets.all(isSmall ? 12 : 16),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                isBoss ? Icons.shield : Icons.science,
-                size: isSmall ? 45 : 60,
-                color: cardColor,
-              ),
-              const SizedBox(height: 12),
-              Text(
-                title,
-                style: TextStyle(
-                  fontFamily: 'PressStart2P',
-                  fontSize: isSmall ? 10 : 12,
-                  color: cardColor,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                difficulty,
-                style: const TextStyle(
-                  fontFamily: 'VT323',
-                  fontSize: 24,
-                  color: Colors.white70,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              if (isBoss && bossName != null)
-                Padding(
-                  padding: const EdgeInsets.only(top: 6),
-                  child: Text(
-                    bossName!,
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
+            child: Padding(
+              padding: EdgeInsets.symmetric(
+                  vertical: isSmall ? 8 : 12, horizontal: isSmall ? 16 : 20),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    widget.isBoss ? Icons.shield : Icons.science,
+                    color: displayColor,
+                    size: isSmall ? 45 : 55,
+                  ),
+                  const SizedBox(height: 8),
+                  
+                  FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      widget.title,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontFamily: 'PressStart2P',
+                        color: displayColor,
+                        fontSize: isSmall ? 12 : 14,
+                        letterSpacing: 1.5,
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 6),
+
+                  if (!widget.isBoss || widget.bossName == null)
+                    Text(
+                      widget.difficulty,
+                      style: TextStyle(
+                        fontFamily: 'VT323',
+                        color: Colors.white70,
+                        fontSize: isSmall ? 18 : 22,
+                      ),
+                    ),
+
+                  if (widget.bossName != null)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 4),
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Text(
+                          widget.bossName!,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontFamily: 'VT323',
+                            color: Colors.white,
+                            fontSize: isSmall ? 18 : 22,
+                          ),
+                        ),
+                      ),
+                    ),
+
+                  const SizedBox(height: 6),
+                  
+                  Text(
+                    "${widget.questions} preguntas",
+                    style: TextStyle(
                       fontFamily: 'VT323',
-                      fontSize: 20,
-                      color: Colors.pinkAccent,
+                      color: Colors.white60,
+                      fontSize: isSmall ? 18 : 20,
                     ),
                   ),
-                ),
-              const SizedBox(height: 8),
-              Text(
-                "$questions preguntas",
-                style: const TextStyle(
-                  fontFamily: 'VT323',
-                  fontSize: 24,
-                  color: Colors.white,
-                ),
+                  
+                  const SizedBox(height: 8),
+                  
+                  if (widget.isCompleted)
+                    const Text(
+                      "✅ COMPLETADO",
+                      style: TextStyle(
+                        fontFamily: 'PressStart2P',
+                        fontSize: 9,
+                        color: Color(0xFF69F0AE),
+                      ),
+                    )
+                  else if (!widget.isUnlocked)
+                    const Text(
+                      "🔒 BLOQUEADO",
+                      style: TextStyle(
+                        fontFamily: 'PressStart2P',
+                        fontSize: 9,
+                        color: Colors.redAccent,
+                      ),
+                    ),
+                ],
               ),
-              if (locked)
-                const Padding(
-                  padding: EdgeInsets.only(top: 8),
-                  child: Text(
-                    "🔒 BLOQUEADO",
-                    style: TextStyle(
-                      fontFamily: "PressStart2P",
-                      fontSize: 9,
-                      color: Colors.redAccent,
-                    ),
-                  ),
-                ),
-              if (completed && !locked)
-                const Padding(
-                  padding: EdgeInsets.only(top: 8),
-                  child: Text(
-                    "✅ COMPLETADO",
-                    style: TextStyle(
-                      fontFamily: "PressStart2P",
-                      fontSize: 9,
-                      color: Colors.greenAccent,
-                    ),
-                  ),
-                ),
-            ],
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }
 
+// ----------------------------------------------------------
+// PINTOR ESPACIAL (FONDO)
+// ----------------------------------------------------------
 class _ScienceSpacePainter extends CustomPainter {
   final double progress;
   _ScienceSpacePainter(this.progress);
@@ -514,7 +546,7 @@ class _ScienceSpacePainter extends CustomPainter {
     final bg = Paint()..color = const Color(0xFF060218);
     canvas.drawRect(Offset.zero & size, bg);
 
-    final starPaint = Paint()..color = Colors.white.withValues(alpha: 0.7);
+    final starPaint = Paint()..color = Colors.white.withOpacity(0.7);
     final random = math.Random(100);
 
     for (int i = 0; i < 120; i++) {
@@ -527,7 +559,7 @@ class _ScienceSpacePainter extends CustomPainter {
     }
 
     final nebula = Paint()
-      ..color = Colors.blue.withValues(alpha: 0.12)
+      ..color = Colors.blue.withOpacity(0.12)
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 30);
 
     canvas.drawCircle(Offset(size.width * 0.7, size.height * 0.3), 180, nebula);

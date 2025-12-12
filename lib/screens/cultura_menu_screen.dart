@@ -5,7 +5,7 @@ import '../data/progress_manager.dart';
 import '../hud_widget.dart';
 import '../comodines_screen.dart';
 import '../jefes_screen.dart';
-import 'cultura_quiz_screen.dart'; // ✅ ÚNICO import de cultura_quiz_screen
+import 'cultura_quiz_screen.dart';
 import '../purgatorio_screen.dart';
 
 class CulturaMenuScreen extends StatefulWidget {
@@ -20,6 +20,9 @@ class _CulturaMenuScreenState extends State<CulturaMenuScreen>
   late AnimationController _controller;
 
   int coins = 0;
+  
+  // ✅ Variable Anti-Spam para logs (3 segundos)
+  DateTime? _lastSnackTime;
 
   Map<int, bool> unlocked = {1: true, 2: false, 3: false, 4: false};
   Map<int, bool> completed = {1: false, 2: false, 3: false, 4: false};
@@ -31,7 +34,7 @@ class _CulturaMenuScreenState extends State<CulturaMenuScreen>
       "difficulty": "Fácil",
       "questions": 5,
       "isBoss": false,
-      "color": Color(0xFFB388FF),
+      "color": Color(0xFFB388FF), // Lavanda Neón
       "bossName": null,
     },
     {
@@ -40,7 +43,7 @@ class _CulturaMenuScreenState extends State<CulturaMenuScreen>
       "difficulty": "Medio",
       "questions": 5,
       "isBoss": false,
-      "color": Color(0xFF9C6EFF),
+      "color": Color(0xFF9C6EFF), // Púrpura Medio
       "bossName": null,
     },
     {
@@ -49,16 +52,16 @@ class _CulturaMenuScreenState extends State<CulturaMenuScreen>
       "difficulty": "Difícil",
       "questions": 10,
       "isBoss": false,
-      "color": Color(0xFF7F4DFF),
+      "color": Color(0xFF7F4DFF), // Violeta Intenso
       "bossName": null,
     },
     {
       "id": 4,
-      "title": "Bloque Final (Jefe)",
+      "title": "Bloque Final", // (Jefe)
       "difficulty": "Mega Difícil",
       "questions": 20,
       "isBoss": true,
-      "color": Color(0xFFE040FB),
+      "color": Color(0xFFE040FB), // Magenta Eléctrico
       "bossName": "El Juicio Relámpago",
     },
   ];
@@ -81,19 +84,23 @@ class _CulturaMenuScreenState extends State<CulturaMenuScreen>
     setState(() => coins = progress.coins);
   }
 
+  void _refreshCoins() async {
+    final progress = await ProgressManager.loadProgress();
+    setState(() => coins = progress.coins);
+  }
+
   Future<void> _loadUnlocks() async {
-    final c1 = await ProgressManager.isCultureBlockCompleted(1);
-    final c2 = await ProgressManager.isCultureBlockCompleted(2);
-    final c3 = await ProgressManager.isCultureBlockCompleted(3);
-    final c4 = await ProgressManager.isCultureBlockCompleted(4);
-    
     final u2 = await ProgressManager.isCultureBlockUnlocked(2);
     final u3 = await ProgressManager.isCultureBlockUnlocked(3);
     final u4 = await ProgressManager.isCultureBlockUnlocked(4);
 
-    if (!mounted) return;
+    final c1 = await ProgressManager.isCultureBlockCompleted(1);
+    final c2 = await ProgressManager.isCultureBlockCompleted(2);
+    final c3 = await ProgressManager.isCultureBlockCompleted(3);
+    final c4 = await ProgressManager.isCultureBlockCompleted(4);
+
     setState(() {
-      unlocked[1] = true;
+      unlocked[1] = true; // ✅ Nivel 1 siempre abierto
       unlocked[2] = u2;
       unlocked[3] = u3;
       unlocked[4] = u4;
@@ -105,9 +112,32 @@ class _CulturaMenuScreenState extends State<CulturaMenuScreen>
     });
   }
 
-  void _refreshCoins() async {
-    final progress = await ProgressManager.loadProgress();
-    setState(() => coins = progress.coins);
+  // ✅ FUNCIÓN SEGURA PARA MOSTRAR MENSAJES (3 seg de espera)
+  void _showSafeSnackBar(String message, Color bgColor, Color textColor) {
+    final now = DateTime.now();
+    
+    if (_lastSnackTime != null && 
+        now.difference(_lastSnackTime!) < const Duration(seconds: 3)) {
+      return; 
+    }
+
+    _lastSnackTime = now; 
+    ScaffoldMessenger.of(context).clearSnackBars();
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        backgroundColor: bgColor,
+        duration: const Duration(seconds: 2),
+        content: Text(
+          message,
+          style: TextStyle(
+            fontFamily: 'PressStart2P',
+            fontSize: 10,
+            color: textColor,
+          ),
+        ),
+      ),
+    );
   }
 
   @override
@@ -119,12 +149,13 @@ class _CulturaMenuScreenState extends State<CulturaMenuScreen>
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
-    final isSmall = size.width < 450;
+    final isSmall = size.width < 500;
 
     return Scaffold(
       backgroundColor: const Color(0xFF12052F),
       body: Stack(
         children: [
+          // FONDO ANIMADO (Original de Cultura)
           AnimatedBuilder(
             animation: _controller,
             builder: (_, __) => CustomPaint(
@@ -138,6 +169,7 @@ class _CulturaMenuScreenState extends State<CulturaMenuScreen>
               children: [
                 const SizedBox(height: 10),
 
+                // HUD
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: GameHUD(
@@ -145,113 +177,165 @@ class _CulturaMenuScreenState extends State<CulturaMenuScreen>
                     onOpenComodines: () => Navigator.push(
                       context,
                       MaterialPageRoute(builder: (_) => const ComodinesScreen()),
+                    ).then((_) => _refreshCoins()),
+                    onOpenJefes: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const JefesScreen()),
                     ),
-                   onOpenJefes: () => Navigator.push(
-  context,
-  MaterialPageRoute(builder: (_) => const JefesScreen()), // ✅ CAMBIAR CodiceScreen() por JefesScreen()
-),
                   ),
                 ),
 
                 const SizedBox(height: 20),
 
+                // TÍTULO
                 const Text(
                   "CULTURA GENERAL",
                   style: TextStyle(
                     fontFamily: 'PressStart2P',
-                    color: Color(0xFFE6E6FA),
+                    color: Color(0xFFE040FB), // Magenta a juego con el jefe
                     fontSize: 14,
                     letterSpacing: 2,
+                    shadows: [
+                      Shadow(
+                        blurRadius: 15,
+                        color: Color(0xFFE040FB),
+                      ),
+                    ],
                   ),
                   textAlign: TextAlign.center,
                 ),
 
                 const SizedBox(height: 22),
 
+                // GRID DE BLOQUES
                 Expanded(
                   child: GridView.builder(
-                    padding: const EdgeInsets.all(24),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: isSmall ? 18 : 28,
+                      vertical: 10,
+                    ),
                     gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: isSmall ? 1 : 2,
-                      crossAxisSpacing: 20,
-                      mainAxisSpacing: 20,
-                      childAspectRatio: isSmall ? 1.2 : 1.0,
+                      crossAxisSpacing: isSmall ? 18 : 26,
+                      mainAxisSpacing: isSmall ? 18 : 26,
+                      // ✅ Aspect Ratio corregido (Gordito)
+                      childAspectRatio: isSmall ? 1.4 : 1.2,
                     ),
                     itemCount: blocks.length,
                     itemBuilder: (context, index) {
-                      final b = blocks[index];
-                      final id = b["id"] as int;
+                      final block = blocks[index];
+                      final id = block["id"] as int;
 
-                      final isUnlocked = unlocked[id] ?? false;
-                      final isCompleted = completed[id] ?? false;
-                      final isPlayable = isUnlocked;
+                      final bool isUnlocked = unlocked[id] ?? false;
+                      final bool isCompleted = completed[id] ?? false;
 
-                      return _CulturaBlockCard(
-                        title: b["title"] as String,
-                        difficulty: b["difficulty"] as String,
-                        questions: b["questions"] as int,
-                        isBoss: b["isBoss"] as bool,
-                        color: b["color"] as Color,
-                        bossName: b["bossName"] as String?,
-                        locked: !isUnlocked,
-                        completed: isCompleted,
+                      return _CultureNeonCard(
+                        title: block["title"],
+                        difficulty: block["difficulty"],
+                        questions: block["questions"],
+                        isBoss: block["isBoss"],
+                        color: block["color"],
+                        bossName: block["bossName"],
+                        isUnlocked: isUnlocked,
+                        isCompleted: isCompleted,
                         onTap: () {
-                          if (!isPlayable) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                backgroundColor: Colors.redAccent,
-                                content: const Text(
-                                  "Debes completar el bloque previo.",
-                                  style: TextStyle(color: Colors.white),
-                                ),
-                              ),
-                            );
-                            return;
-                          }
-
+                          // 1. CHEQUEO DE COMPLETADO
                           if (isCompleted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                backgroundColor: Colors.greenAccent,
-                                content: const Text(
-                                  "Ya completado. ¡Bien hecho!",
-                                  style: TextStyle(color: Colors.black),
-                                ),
-                              ),
+                            _showSafeSnackBar(
+                              "¡Ya completaste este bloque!",
+                              const Color(0xFF69F0AE),
+                              Colors.black,
                             );
                             return;
                           }
 
+                          // 2. CHEQUEO DE BLOQUEO
+                          if (id != 1 && !isUnlocked) {
+                            _showSafeSnackBar(
+                              "Completa el bloque anterior",
+                              Colors.redAccent,
+                              Colors.white,
+                            );
+                            return;
+                          }
+
+                          // 3. NAVEGACIÓN
                           Navigator.push(
                             context,
                             MaterialPageRoute(
                               builder: (_) => CulturaQuizScreen(
                                 blockId: id,
-                                totalQuestions: b["questions"] as int,
-                                isBoss: b["isBoss"] as bool,
+                                totalQuestions: block["questions"],
+                                isBoss: block["isBoss"],
                               ),
                             ),
-                          ).then((_) => _loadUnlocks());
+                          ).then((_) {
+                            _refreshCoins();
+                            _loadUnlocks();
+                          });
                         },
                       );
                     },
                   ),
                 ),
+                
+                const SizedBox(height: 80),
               ],
             ),
           ),
 
+          // BOTÓN DE REGRESO (Estilo Unificado Neon - Púrpura)
           Positioned(
-            bottom: 20,
             left: 20,
-            child: FloatingActionButton(
-              backgroundColor: Colors.deepPurpleAccent,
-              onPressed: () => Navigator.pushAndRemoveUntil(
-                context,
-                MaterialPageRoute(builder: (_) => const PurgatorioScreen()),
-                (route) => false,
+            bottom: 20,
+            child: GestureDetector(
+              onTap: () {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (_) => const PurgatorioScreen()),
+                );
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 16,
+                ),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF12052F),
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(
+                    color: const Color.fromARGB(255, 165, 124, 172),
+                    width: 2.5,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFFE040FB).withOpacity(0.4),
+                      blurRadius: 16,
+                      spreadRadius: 2,
+                    ),
+                  ],
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: const [
+                    Icon(
+                      Icons.arrow_back_rounded,
+                      color: Color(0xFFE040FB),
+                      size: 28,
+                    ),
+                    SizedBox(width: 12),
+                    Text(
+                      "VOLVER",
+                      style: TextStyle(
+                        fontFamily: 'PressStart2P',
+                        fontSize: 13,
+                        color: Color.fromARGB(255, 141, 57, 155),
+                        letterSpacing: 1.5,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-              child: const Icon(Icons.arrow_back, color: Colors.white),
             ),
           ),
         ],
@@ -260,135 +344,208 @@ class _CulturaMenuScreenState extends State<CulturaMenuScreen>
   }
 }
 
-class _CulturaBlockCard extends StatelessWidget {
+// ----------------------------------------------------------
+// TARJETA DE BLOQUE (DISEÑO UNIFICADO NEON)
+// ----------------------------------------------------------
+class _CultureNeonCard extends StatefulWidget {
   final String title;
   final String difficulty;
   final int questions;
   final bool isBoss;
   final Color color;
   final String? bossName;
-  final bool locked;
-  final bool completed;
+  final bool isUnlocked;
+  final bool isCompleted;
   final VoidCallback onTap;
 
-  const _CulturaBlockCard({
+  const _CultureNeonCard({
     required this.title,
     required this.difficulty,
     required this.questions,
     required this.isBoss,
     required this.color,
-    required this.locked,
-    required this.completed,
+    required this.isUnlocked,
+    required this.isCompleted,
     required this.onTap,
     this.bossName,
   });
 
   @override
-  Widget build(BuildContext context) {
-    final isSmall = MediaQuery.of(context).size.width < 450;
-    final cardColor = locked ? Colors.grey : color;
+  State<_CultureNeonCard> createState() => _CultureNeonCardState();
+}
 
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 200),
-      decoration: BoxDecoration(
-        color: const Color(0xFF1A0C3D),
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: cardColor, width: 2),
-        boxShadow: [
-          if (!locked)
-            BoxShadow(
-              color: cardColor.withValues(alpha: 0.7),
-              blurRadius: 18,
-              spreadRadius: 2,
+class _CultureNeonCardState extends State<_CultureNeonCard>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _pulseController;
+
+  @override
+  void initState() {
+    super.initState();
+    _pulseController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1500),
+    )..repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _pulseController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isSmall = MediaQuery.of(context).size.width < 500;
+
+    // ✅ LÓGICA DE COLOR (Igual que los otros menús)
+    Color displayColor;
+    if (widget.isCompleted) {
+      displayColor = const Color(0xFF69F0AE); // Verde Neón Mate
+    } else if (!widget.isUnlocked) {
+      displayColor = Colors.grey.shade700;
+    } else {
+      displayColor = widget.color;
+    }
+
+    return AnimatedBuilder(
+      animation: _pulseController,
+      builder: (context, child) {
+        // Solo pulsa si está desbloqueado Y NO completado
+        final pulseOpacity = (widget.isUnlocked && !widget.isCompleted)
+            ? 0.3 + (_pulseController.value * 0.3)
+            : 0.0;
+
+        return GestureDetector(
+          onTap: widget.onTap,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 300),
+            decoration: BoxDecoration(
+              // ✅ Borde Redondeado 32
+              borderRadius: BorderRadius.circular(32),
+              color: const Color(0xFF1A0C3D).withOpacity(
+                widget.isUnlocked ? 0.9 : 0.6,
+              ),
+              border: Border.all(
+                color: displayColor,
+                width: widget.isUnlocked ? 3 : 2,
+              ),
+              boxShadow: [
+                // ✅ Sombra Neón controlada
+                if (widget.isUnlocked && !widget.isCompleted)
+                  BoxShadow(
+                    color: displayColor.withOpacity(pulseOpacity),
+                    blurRadius: 12,
+                    spreadRadius: 0,
+                  ),
+              ],
             ),
-        ],
-      ),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(22),
-        onTap: locked ? null : onTap,
-        child: Padding(
-          padding: EdgeInsets.all(isSmall ? 12 : 16),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                isBoss ? Icons.bolt : Icons.menu_book,
-                size: isSmall ? 46 : 60,
-                color: cardColor,
-              ),
-              const SizedBox(height: 10),
-              Text(
-                title,
-                style: TextStyle(
-                  fontFamily: 'PressStart2P',
-                  fontSize: isSmall ? 10 : 12,
-                  color: cardColor,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 6),
-              Text(
-                difficulty,
-                style: const TextStyle(
-                  fontFamily: 'VT323',
-                  fontSize: 24,
-                  color: Colors.white70,
-                ),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                "$questions preguntas",
-                style: const TextStyle(
-                  fontFamily: 'VT323',
-                  fontSize: 22,
-                  color: Colors.white,
-                ),
-              ),
-              if (isBoss && bossName != null)
-                Padding(
-                  padding: const EdgeInsets.only(top: 6),
-                  child: Text(
-                    bossName!,
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
+            child: Padding(
+              // ✅ Padding ajustado para evitar Overflow
+              padding: EdgeInsets.symmetric(
+                  vertical: isSmall ? 8 : 12, horizontal: isSmall ? 16 : 20),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min, // Comprimir contenido
+                children: [
+                  Icon(
+                    widget.isBoss ? Icons.bolt : Icons.menu_book,
+                    color: displayColor,
+                    size: isSmall ? 45 : 55,
+                  ),
+                  const SizedBox(height: 8),
+                  
+                  // TÍTULO
+                  FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      widget.title,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontFamily: 'PressStart2P',
+                        color: displayColor,
+                        fontSize: isSmall ? 12 : 14,
+                        letterSpacing: 1.5,
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 6),
+
+                  // DIFICULTAD
+                  if (!widget.isBoss || widget.bossName == null)
+                    Text(
+                      widget.difficulty,
+                      style: TextStyle(
+                        fontFamily: 'VT323',
+                        color: Colors.white70,
+                        fontSize: isSmall ? 18 : 22,
+                      ),
+                    ),
+
+                  // JEFE NOMBRE (Si existe)
+                  if (widget.bossName != null)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 4),
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Text(
+                          widget.bossName!,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontFamily: 'VT323',
+                            color: Colors.white,
+                            fontSize: isSmall ? 18 : 22,
+                          ),
+                        ),
+                      ),
+                    ),
+
+                  const SizedBox(height: 6),
+                  
+                  // PREGUNTAS
+                  Text(
+                    "${widget.questions} preguntas",
+                    style: TextStyle(
                       fontFamily: 'VT323',
-                      fontSize: 22,
-                      color: Colors.purpleAccent,
+                      color: Colors.white60,
+                      fontSize: isSmall ? 18 : 20,
                     ),
                   ),
-                ),
-              if (locked)
-                const Padding(
-                  padding: EdgeInsets.only(top: 8),
-                  child: Text(
-                    "🔒 BLOQUEADO",
-                    style: TextStyle(
-                      fontFamily: "PressStart2P",
-                      fontSize: 9,
-                      color: Colors.redAccent,
+                  
+                  const SizedBox(height: 8),
+                  
+                  // ESTADO
+                  if (widget.isCompleted)
+                    const Text(
+                      "✅ COMPLETADO",
+                      style: TextStyle(
+                        fontFamily: 'PressStart2P',
+                        fontSize: 9,
+                        color: Color(0xFF69F0AE),
+                      ),
+                    )
+                  else if (!widget.isUnlocked)
+                    const Text(
+                      "🔒 BLOQUEADO",
+                      style: TextStyle(
+                        fontFamily: 'PressStart2P',
+                        fontSize: 9,
+                        color: Colors.redAccent,
+                      ),
                     ),
-                  ),
-                ),
-              if (completed && !locked)
-                const Padding(
-                  padding: EdgeInsets.only(top: 8),
-                  child: Text(
-                    "✅ COMPLETADO",
-                    style: TextStyle(
-                      fontFamily: "PressStart2P",
-                      fontSize: 9,
-                      color: Colors.greenAccent,
-                    ),
-                  ),
-                ),
-            ],
+                ],
+              ),
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }
 
+// ----------------------------------------------------------
+// PINTOR LAVANDA (FONDO CULTURA)
+// ----------------------------------------------------------
 class _NatureLavenderPainter extends CustomPainter {
   final double progress;
   _NatureLavenderPainter(this.progress);

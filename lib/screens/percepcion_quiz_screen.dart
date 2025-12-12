@@ -1,8 +1,5 @@
 // ----------------------------------------------------------
-//   PERCEPCIÓN — QUIZ SCREEN (VERSIÓN MEJORADA ATERRADORA)
-//   + Niebla animada, efectos de horror en el jefe
-//   + Interactividad mejorada en respuestas
-//   + Diseño responsive y aterrador
+//   PERCEPCIÓN — QUIZ SCREEN (VERSIÓN MEJORADA)
 // ----------------------------------------------------------
 
 import 'dart:async';
@@ -14,7 +11,6 @@ import '../data/progress_manager.dart';
 import '../models/powerup_model.dart';
 import '../data/powerup_effects.dart';
 import 'percepcion_menu.dart';
-
 
 class PercepcionQuizScreen extends StatefulWidget {
   final int blockId;
@@ -48,7 +44,7 @@ class _PercepcionQuizScreenState extends State<PercepcionQuizScreen>
   String? selectedAnswer;
   bool answerChecked = false;
 
-   List<PowerUp> equipped = [];
+  List<PowerUp> equipped = [];
   List<String> opcionesOcultas = [];
 
   bool isBossFight = false;
@@ -63,7 +59,7 @@ class _PercepcionQuizScreenState extends State<PercepcionQuizScreen>
     super.initState();
 
     // ✅ EL JEFE ES EL BLOQUE 2
-   isBossFight = widget.isBoss && widget.blockId == 2;
+    isBossFight = widget.isBoss && widget.blockId == 2;
 
     timeRemaining = widget.blockId == 1 ? 80 : widget.blockId == 2 ? 70 : 12;
 
@@ -98,8 +94,6 @@ class _PercepcionQuizScreenState extends State<PercepcionQuizScreen>
     super.dispose();
   }
 
-  // ...existing code...
-
   Future<void> _loadEquipped() async {
     equipped = await ProgressManager.loadSelectedPowerUps();
     // ✅ FILTRAR SOLO LOS QUE SON VÁLIDOS (no nulos o vacíos)
@@ -107,8 +101,6 @@ class _PercepcionQuizScreenState extends State<PercepcionQuizScreen>
     if (!mounted) return;
     setState(() {});
   }
-
-// ...existing code...
 
   Future<void> _loadCoins() async {
     final p = await ProgressManager.loadProgress();
@@ -174,11 +166,7 @@ class _PercepcionQuizScreenState extends State<PercepcionQuizScreen>
                 MaterialPageRoute(builder: (_) => const PercepcionMenuScreen()),
                 (route) => false,
               );
-
-              
             },
-
-            
             child: const Text(
               "VOLVER",
               style: TextStyle(
@@ -267,7 +255,7 @@ class _PercepcionQuizScreenState extends State<PercepcionQuizScreen>
     );
   }
 
-   void pasarSiguiente() {
+  void pasarSiguiente() {
     selectedAnswer = null;
     answerChecked = false;
     opcionesOcultas = [];
@@ -356,9 +344,11 @@ class _PercepcionQuizScreenState extends State<PercepcionQuizScreen>
       return;
     }
 
-    // ✅ DESBLOQUEAR COMODÍN AL DERROTAR JEFE DE PERCEPCIÓN
+    // ✅ DESBLOQUEAR COMODÍN Y ACTIVAR NOTIFICACIÓN
     if (isBossFight) {
       await ProgressManager.defeatBoss("boss_percepcion");
+      // 👇 ESTA LÍNEA HACE QUE EL HUD TITILE EN EL MENÚ 👇
+      await ProgressManager.saveBool("has_new_powerup", true);
     }
 
     final monedasGanadas = calcularMonedas();
@@ -436,14 +426,17 @@ class _PercepcionQuizScreenState extends State<PercepcionQuizScreen>
     final isSmall = size.width < 500;
 
     return Scaffold(
-      backgroundColor: isBossFight ? const Color(0xFF0A0012) : const Color(0xFF150C25),
+      backgroundColor:
+          isBossFight ? const Color(0xFF0A0012) : const Color(0xFF150C25),
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         automaticallyImplyLeading: false,
         centerTitle: true,
         title: Text(
-          isBossFight ? "👁️ LA SOMBRA DEL OJO 👁️" : "BLOQUE ${widget.blockId}",
+          isBossFight
+              ? "👁️ LA SOMBRA DEL OJO 👁️"
+              : "BLOQUE ${widget.blockId}",
           style: TextStyle(
             color: isBossFight ? Colors.redAccent : Colors.cyanAccent,
             fontFamily: "PressStart2P",
@@ -509,6 +502,9 @@ class _PercepcionQuizScreenState extends State<PercepcionQuizScreen>
                         padding: EdgeInsets.all(isSmall ? 18 : 24),
                         child: Column(
                           children: [
+                            // ----------------------------------------
+                            // HUD SUPERIOR (Monedas + Comodines)
+                            // ----------------------------------------
                             Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
@@ -527,25 +523,36 @@ class _PercepcionQuizScreenState extends State<PercepcionQuizScreen>
                               ],
                             ),
                             const SizedBox(height: 12),
+
+                            // ✅ BOTONES DE COMODINES CON PRECIO Y DISEÑO
                             if (equipped.isNotEmpty)
                               Wrap(
                                 spacing: 10,
                                 runSpacing: 8,
                                 alignment: WrapAlignment.center,
-                               // ...existing code...
                                 children: equipped.map((p) {
                                   final usado = usedPowerups.contains(p.id);
-                                  final label = (p.name.isNotEmpty) ? p.name : p.id ?? "?";
+                                  final label =
+                                      (p.name.isNotEmpty) ? p.name : p.id;
+
                                   return ElevatedButton(
-// ...existing code...
                                     style: ElevatedButton.styleFrom(
                                       backgroundColor: usado
-                                          ? Colors.grey
+                                          ? Colors.grey.withOpacity(0.5)
                                           : const Color(0xFF24133D),
                                       foregroundColor: Colors.cyanAccent,
                                       padding: EdgeInsets.symmetric(
-                                        vertical: isSmall ? 8 : 10,
+                                        vertical: isSmall ? 9 : 11,
                                         horizontal: isSmall ? 10 : 12,
+                                      ),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(10),
+                                        side: BorderSide(
+                                          color: usado
+                                              ? Colors.transparent
+                                              : Colors.white24,
+                                          width: 1,
+                                        ),
                                       ),
                                     ),
                                     onPressed: (usado || answerChecked)
@@ -564,16 +571,52 @@ class _PercepcionQuizScreenState extends State<PercepcionQuizScreen>
                                             );
                                             if (mounted) setState(() {});
                                           },
-                                    child: Text(
-                                      label,
-                                      style: TextStyle(
-                                        fontFamily: 'PressStart2P',
-                                        fontSize: isSmall ? 9 : 10,
-                                      ),
+                                    // ✅ AQUÍ ESTÁ EL CAMBIO VISUAL (Columna con Precio)
+                                    child: Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Text(
+                                          label,
+                                          textAlign: TextAlign.center,
+                                          style: TextStyle(
+                                            fontFamily: 'PressStart2P',
+                                            fontSize: isSmall ? 12 : 13,
+                                            color: usado
+                                                ? Colors.white54
+                                                : Colors.cyanAccent,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 4),
+                                        // FILA DE PRECIO
+                                        Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Icon(
+                                              Icons.stars_rounded, // Icono Moneda
+                                              size: 17,
+                                              color: usado
+                                                  ? Colors.white38
+                                                  : const Color(0xFFFFD700),
+                                            ),
+                                            const SizedBox(width: 4),
+                                            Text(
+                                              "${p.price}",
+                                              style: TextStyle(
+                                                fontFamily: 'PressStart2P',
+                                                fontSize: 16,
+                                                color: usado
+                                                    ? Colors.white38
+                                                    : const Color(0xFFFFD700),
+                                              ),
+                                            ),
+                                          ],
+                                        )
+                                      ],
                                     ),
                                   );
                                 }).toList(),
                               ),
+
                             const SizedBox(height: 16),
                             Text(
                               "Puntaje: $score",
@@ -600,7 +643,8 @@ class _PercepcionQuizScreenState extends State<PercepcionQuizScreen>
                             ),
                             const SizedBox(height: 24),
                             Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 8),
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 8),
                               child: Text(
                                 pregunta.pregunta,
                                 style: TextStyle(

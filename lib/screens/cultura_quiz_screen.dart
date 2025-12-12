@@ -1,13 +1,13 @@
 // ----------------------------------------------------------
-//   CULTURA GENERAL — QUIZ SCREEN (VERSIÓN FINAL CORREGIDA)
-//   4 Bloques: 5 / 5 / 10 / 20 preguntas
-//   JEFE FINAL (Bloque 4): 20 preguntas | 3 errores = MUERTE | Cada error -10 monedas
-//   Fondo Normal: Tarde cálida con hojas cayendo
-//   JEFE: Kraken gigante con ojo + reloj + monedas flotantes
+//   CULTURA GENERAL — QUIZ SCREEN (VERSIÓN FINAL PERFECTA)
+//   + HUD: Tamaños aumentados (más grandes y visibles).
+//   + Fix: Protección contra desbordamiento y crash.
+//   + Diseño: Jefe (Neón/Dark) y Comodines Originales.
 // ----------------------------------------------------------
 
 import 'dart:async';
 import 'dart:math' as math;
+import 'dart:ui'; // Necesario para el efecto Blur
 import 'package:flutter/material.dart';
 
 import '../data/cultura_service.dart';
@@ -53,21 +53,29 @@ class _CulturaQuizScreenState extends State<CulturaQuizScreen>
   bool isBossFight = false;
   bool _isProcessing = false;
 
-    List<PowerUp> equipped = [];
+  List<PowerUp> equipped = [];
   Set<String> usedPowerups = {};
-  List<String> opcionesOcultas = []; // ✅ PARA OCULTAR OPCIONES
-  String? hintedOption; // ✅ PARA MOSTRAR HINT
-  List<String> opcionesBarajadas = []; // ✅ OPCIONES EN ORDEN ALEATORIO
-  String? _preguntaClave;  
+  List<String> opcionesOcultas = [];
+  String? hintedOption;
+  List<String> opcionesBarajadas = [];
+  String? _preguntaClave;
+
+  // COLORES TEMA CÁLIDO
+  final Color _warmTextColor = const Color(0xFF3E2723);
+  final Color _warmContainerColor = const Color(0xFF4E342E).withOpacity(0.9);
+  final Color _warmBorderColor = const Color(0xFF8D6E63);
+  final Color _warmOptionColor = const Color(0xFFFFF3E0).withOpacity(0.95);
+
+  // COLORES TEMA JEFE
+  final Color _bossTextColor = const Color(0xFFE6E6FA);
+  final Color _bossContainerColor = const Color(0xFF1A0C3D).withOpacity(0.85);
+  final Color _bossBorderColor = const Color(0xFFE6E6FA);
 
   @override
   void initState() {
     super.initState();
-
-    // ✅ JEFE ES BLOQUE 4, NO BLOQUE 3
     isBossFight = widget.isBoss && widget.blockId == 4;
-    timeRemaining = isBossFight ? 20 : 40;
-
+    timeRemaining = isBossFight ? 25 : 40;
     futurePreguntas = CulturaService.obtenerPreguntasBloque(widget.blockId);
 
     _leafController = AnimationController(
@@ -105,21 +113,28 @@ class _CulturaQuizScreenState extends State<CulturaQuizScreen>
     setState(() => coins = p.coins);
   }
 
- // ...existing code...
-
- // ...existing code...
-
-  // ✅ CARGAR COMODINES
   Future<void> _loadEquipped() async {
     equipped = await ProgressManager.loadSelectedPowerUps();
-    // ✅ FILTRAR SOLO LOS QUE SON VÁLIDOS (no nulos o vacíos)
     equipped = equipped.where((p) => p.id.isNotEmpty).toList();
     if (!mounted) return;
     setState(() {});
   }
 
-// ...existing code...
-// ...existing code...
+  void _setHint(String h) {
+    if (mounted) setState(() => hintedOption = h);
+  }
+
+  void _hideSpecificOptions(List<String> ops) {
+    if (mounted) setState(() => opcionesOcultas.addAll(ops));
+  }
+
+  void _addExtraSeconds(int s) {
+    if (mounted)
+      setState(() => timeRemaining = (timeRemaining + s).clamp(0, 60));
+  }
+
+  Future<void> _refreshCoins() async => _loadCoins();
+
   void startTimer() {
     timer?.cancel();
     timer = Timer.periodic(const Duration(seconds: 1), (t) {
@@ -132,18 +147,18 @@ class _CulturaQuizScreenState extends State<CulturaQuizScreen>
       }
     });
   }
+
   void tiempoAgotado() async {
     if (_isProcessing) return;
     _isProcessing = true;
-
     timer?.cancel();
 
-    // ❌ Tiempo agotado: reinicia todo Cultura
     await ProgressManager.failCultureBlock(widget.blockId);
 
     if (!mounted) return;
     await _showResultScreen(false, 0);
 
+    if (!mounted) return;
     Navigator.of(context).pushAndRemoveUntil(
       MaterialPageRoute(builder: (_) => const CulturaMenuScreen()),
       (route) => false,
@@ -164,18 +179,19 @@ class _CulturaQuizScreenState extends State<CulturaQuizScreen>
     } else if (isBossFight) {
       bossErrors++;
       await ProgressManager.addCoins(-10);
+      
+      if (!mounted) return;
       await _loadCoins();
 
       if (bossErrors >= 3) {
         _isProcessing = true;
         timer?.cancel();
-
-        // ❌ Falló el jefe: reinicia todo Cultura
         await ProgressManager.failCultureBlock(widget.blockId);
 
         if (!mounted) return;
         await _showResultScreen(false, 0);
 
+        if (!mounted) return;
         Navigator.of(context).pushAndRemoveUntil(
           MaterialPageRoute(builder: (_) => const CulturaMenuScreen()),
           (route) => false,
@@ -186,6 +202,7 @@ class _CulturaQuizScreenState extends State<CulturaQuizScreen>
 
     timer?.cancel();
     await Future.delayed(const Duration(milliseconds: 700));
+    if (!mounted) return;
     pasarSiguiente();
   }
 
@@ -193,11 +210,10 @@ class _CulturaQuizScreenState extends State<CulturaQuizScreen>
     selectedAnswer = null;
     answerChecked = false;
     usedPowerups.clear();
-    opcionesOcultas.clear(); // ✅ LIMPIAR OPCIONES OCULTAS
-    hintedOption = null; // ✅ LIMPIAR HINT
-    opcionesBarajadas = []; // ✅ Forzar nuevo shuffle
-
-    timeRemaining = isBossFight ? 20 : 40;
+    opcionesOcultas.clear();
+    hintedOption = null;
+    opcionesBarajadas = [];
+    timeRemaining = isBossFight ? 25 : 40;
 
     if (currentIndex == widget.totalQuestions - 1) {
       terminarBloque();
@@ -206,6 +222,7 @@ class _CulturaQuizScreenState extends State<CulturaQuizScreen>
       startTimer();
     }
   }
+
   int calcularMonedas() {
     if (widget.blockId <= 2) {
       if (score == 5) return 10;
@@ -217,7 +234,6 @@ class _CulturaQuizScreenState extends State<CulturaQuizScreen>
       if (score >= 5) return 10;
       return 0;
     }
-    // ✅ BLOQUE 4 ES JEFE
     if (widget.blockId == 4 && isBossFight) {
       if (score == 20) return 50;
       if (score >= 10) return 30;
@@ -226,19 +242,13 @@ class _CulturaQuizScreenState extends State<CulturaQuizScreen>
     return 0;
   }
 
-// ...existing code...
-
-
   Future<void> terminarBloque() async {
     if (_isProcessing) return;
     _isProcessing = true;
-
     timer?.cancel();
 
-    // ✅ MÍNIMO DIFERENTE PARA JEFE
     final minimo = widget.blockId == 4 ? 10 : (widget.blockId == 3 ? 5 : 4);
     final paso = score >= minimo;
-
     final monedas = paso ? calcularMonedas() : 0;
 
     if (paso) {
@@ -246,6 +256,7 @@ class _CulturaQuizScreenState extends State<CulturaQuizScreen>
 
       if (isBossFight) {
         await ProgressManager.defeatBoss("boss_cultura_4");
+        await ProgressManager.saveBool("has_new_powerup", true);
       }
 
       await ProgressManager.completeCultureBlock(widget.blockId);
@@ -254,155 +265,188 @@ class _CulturaQuizScreenState extends State<CulturaQuizScreen>
         await ProgressManager.unlockCultureBlock(widget.blockId + 1);
       }
 
-      // ✅ Ya no limpiamos unlockedBlocks; se mostrará “completado”, no “bloqueado”.
       if (isBossFight && mounted) {
-        await _showEscapeDialog(); // Mensaje “saliste del purgatorio”
+        await _showEscapeDialog();
       }
     } else {
-      // ❌ FALLASTE: RESETEAR TODO EL NIVEL
       await ProgressManager.failCultureBlock(widget.blockId);
     }
 
     if (!mounted) return;
     await _showResultScreen(paso, monedas);
 
+    if (!mounted) return;
     Navigator.of(context).pushAndRemoveUntil(
       MaterialPageRoute(builder: (_) => const CulturaMenuScreen()),
       (route) => false,
     );
   }
 
-
-// ...existing code...
   Future<void> _showResultScreen(bool passed, int earnedCoins) async {
     return showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (_) => AlertDialog(
-        backgroundColor: const Color(0xFF1A0C3D).withOpacity(0.95),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text(
-          passed ? "🎉 ¡BLOQUE SUPERADO!" : "❌ BLOQUE FALLIDO",
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            fontFamily: "PressStart2P",
-            fontSize: 14,
-            color: passed ? Colors.greenAccent : Colors.redAccent,
+      builder: (_) => Stack(
+        children: [
+          BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+            child: Container(color: Colors.black.withOpacity(0.2)),
           ),
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              "Aciertos: $score / ${widget.totalQuestions}",
+          AlertDialog(
+            backgroundColor: isBossFight
+                ? _bossContainerColor
+                : _warmContainerColor,
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            title: Text(
+              passed ? "🎉 ¡BLOQUE SUPERADO!" : "❌ BLOQUE FALLIDO",
               textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontFamily: "VT323",
-                fontSize: 28,
-                color: Colors.white,
+              style: TextStyle(
+                fontFamily: "PressStart2P",
+                fontSize: 16,
+                color: passed ? Colors.greenAccent : Colors.redAccent,
+                shadows: [
+                  Shadow(
+                    blurRadius: 10,
+                    color: (passed ? Colors.greenAccent : Colors.redAccent)
+                        .withOpacity(0.6),
+                  ),
+                ],
               ),
             ),
-            if (passed && earnedCoins > 0) ...[
-              const SizedBox(height: 16),
-              Text(
-                "💰 +$earnedCoins monedas",
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  fontFamily: "VT323",
-                  fontSize: 32,
-                  color: Color(0xFFFFD700),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  "Aciertos: $score / ${widget.totalQuestions}",
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontFamily: "VT323",
+                    fontSize: 32,
+                    color: Colors.white,
+                  ),
                 ),
-              ),
-            ],
-            if (!passed) ...[
-              const SizedBox(height: 16),
-              Text(
-                isBossFight
-                    ? "El Kraken te ha devorado."
-                    : "No has alcanzado el mínimo requerido.",
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  fontFamily: "VT323",
-                  fontSize: 24,
-                  color: Colors.white70,
-                ),
-              ),
-            ],
-          ],
-        ),
-        actions: [
-          Center(
-            child: TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text(
-                "CONTINUAR",
-                style: TextStyle(
-                  color: Color(0xFFE6E6FA),
-                  fontFamily: "PressStart2P",
-                  fontSize: 12,
-                ),
-              ),
+                if (passed && earnedCoins > 0) ...[
+                  const SizedBox(height: 16),
+                  Text(
+                    "💰 +$earnedCoins monedas",
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      fontFamily: "VT323",
+                      fontSize: 32,
+                      color: Color(0xFFFFD700),
+                    ),
+                  ),
+                ],
+                if (!passed) ...[
+                  const SizedBox(height: 16),
+                  Text(
+                    isBossFight
+                        ? "El Kraken te ha devorado."
+                        : "No has alcanzado el mínimo requerido.",
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      fontFamily: "VT323",
+                      fontSize: 24,
+                      color: Colors.white70,
+                    ),
+                  ),
+                ],
+              ],
             ),
-          )
+            actions: [
+              Center(
+                child: TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text(
+                    "CONTINUAR",
+                    style: TextStyle(
+                      color: Colors.cyanAccent,
+                      fontFamily: "PressStart2P",
+                      fontSize: 14,
+                    ),
+                  ),
+                ),
+              )
+            ],
+          ),
         ],
       ),
     );
   }
 
-    Future<void> _showEscapeDialog() async {
+  Future<void> _showEscapeDialog() async {
     return showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (_) => AlertDialog(
-        backgroundColor: const Color(0xFF0A0A1A),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-        title: const Text(
-          "¡Felicidades!",
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            fontFamily: "PressStart2P",
-            fontSize: 14,
-            color: Colors.greenAccent,
+      builder: (_) => Stack(
+        children: [
+          BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
+            child: Container(color: Colors.black.withOpacity(0.3)),
           ),
-        ),
-        content: const Text(
-          "Saliste del purgatorio.\n\nNuevas aventuras te esperan próximamente.\n\nEres libre. ¡Bien hecho, guerrero mental!",
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            fontFamily: "VT323",
-            fontSize: 26,
-            color: Colors.white,
-            height: 1.3,
-          ),
-        ),
-        actions: [
-          Center(
-            child: TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text(
-                "CONTINUAR",
-                style: TextStyle(
-                  color: Colors.cyanAccent,
-                  fontFamily: "PressStart2P",
-                  fontSize: 12,
-                ),
+          AlertDialog(
+            backgroundColor: const Color(0xFF0A0A1A).withOpacity(0.9),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+            title: const Text(
+              "¡Felicidades!",
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontFamily: "PressStart2P",
+                fontSize: 14,
+                color: Colors.greenAccent,
               ),
             ),
-          )
+            content: const Text(
+              "Saliste del purgatorio.\n\nNuevas aventuras te esperan próximamente.\n\nEres libre. ¡Bien hecho, guerrero mental!",
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontFamily: "VT323",
+                fontSize: 26,
+                color: Colors.white,
+                height: 1.3,
+              ),
+            ),
+            actions: [
+              Center(
+                child: TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text(
+                    "CONTINUAR",
+                    style: TextStyle(
+                      color: Colors.cyanAccent,
+                      fontFamily: "PressStart2P",
+                      fontSize: 12,
+                    ),
+                  ),
+                ),
+              )
+            ],
+          ),
         ],
       ),
     );
   }
 
   Color getColor(Pregunta p, String opcion) {
-    if (!answerChecked) {
-      // ✅ MOSTRAR HINT EN AZUL CLARO
-      if (opcion == hintedOption) return Colors.lightBlueAccent;
-      return const Color(0xFFE6E6FA).withOpacity(0.9);
+    if (isBossFight) {
+      if (!answerChecked) {
+        if (opcion == hintedOption) return Colors.lightBlueAccent;
+        return const Color(0xFFE6E6FA).withOpacity(0.9);
+      }
+      if (opcion == p.correcta) return Colors.greenAccent;
+      if (opcion == selectedAnswer) return Colors.redAccent;
+      return const Color(0xFFE6E6FA).withOpacity(0.7);
+    } else {
+      if (!answerChecked) {
+        if (opcion == hintedOption) return Colors.orangeAccent;
+        return _warmOptionColor;
+      }
+      if (opcion == p.correcta) return Colors.green;
+      if (opcion == selectedAnswer) return Colors.red;
+      return _warmOptionColor.withOpacity(0.7);
     }
-    if (opcion == p.correcta) return Colors.greenAccent;
-    if (opcion == selectedAnswer) return Colors.redAccent;
-    return const Color(0xFFE6E6FA).withOpacity(0.7);
   }
 
   @override
@@ -410,12 +454,19 @@ class _CulturaQuizScreenState extends State<CulturaQuizScreen>
     final size = MediaQuery.of(context).size;
     final isSmall = size.width < 450;
 
+    // Colores base
+    final clockColor = isBossFight
+        ? (timeRemaining < 6 ? Colors.redAccent : Colors.cyanAccent)
+        : (timeRemaining < 6 ? Colors.red : const Color(0xFF00838F));
+    final coinColor = isBossFight
+        ? Colors.amberAccent
+        : const Color.fromARGB(255, 159, 80, 11);
+
     return Scaffold(
       backgroundColor:
-          isBossFight ? const Color(0xFF0A0A1A) : const Color(0xFF2A1A4D),
+          isBossFight ? const Color(0xFF0A0A1A) : const Color(0xFFFFD54F),
       body: Stack(
         children: [
-          // FONDO ANIMADO
           AnimatedBuilder(
             animation: Listenable.merge(
                 [_leafController, _bossController, _coinController]),
@@ -429,15 +480,17 @@ class _CulturaQuizScreenState extends State<CulturaQuizScreen>
               size: size,
             ),
           ),
-
-          // CONTENIDO
           SafeArea(
             child: FutureBuilder<List<Pregunta>>(
               future: futurePreguntas,
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(
-                    child: CircularProgressIndicator(color: Color(0xFFE6E6FA)),
+                  return Center(
+                    child: CircularProgressIndicator(
+                      color: isBossFight
+                          ? const Color(0xFFE6E6FA)
+                          : _warmTextColor,
+                    ),
                   );
                 }
 
@@ -458,9 +511,8 @@ class _CulturaQuizScreenState extends State<CulturaQuizScreen>
                   return const Center(child: Text("FIN"));
                 }
 
-                     final p = preguntas[currentIndex];
+                final p = preguntas[currentIndex];
 
-                // ✅ Barajar opciones una sola vez por pregunta
                 if (_preguntaClave != p.pregunta) {
                   opcionesBarajadas = List<String>.from(p.opciones)..shuffle();
                   _preguntaClave = p.pregunta;
@@ -470,12 +522,10 @@ class _CulturaQuizScreenState extends State<CulturaQuizScreen>
                     .where((op) => !opcionesOcultas.contains(op))
                     .toList();
 
-
                 return Column(
                   children: [
-                    const SizedBox(height: 20),
-
-                    // TÍTULO
+                    // --- 1. CABECERA: Título y Contador ---
+                    SizedBox(height: size.height * 0.015), 
                     Text(
                       isBossFight
                           ? "🐙 EL KRAKEN DEL JUICIO 🐙"
@@ -483,99 +533,241 @@ class _CulturaQuizScreenState extends State<CulturaQuizScreen>
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontFamily: "PressStart2P",
-                        color: isBossFight
-                            ? Colors.redAccent
-                            : const Color(0xFFE6E6FA),
-                        fontSize: isSmall ? 11 : 14,
+                        color: isBossFight ? Colors.redAccent : _warmTextColor,
+                        fontSize: isSmall ? 10 : 12,
                         shadows: [
                           Shadow(
                             blurRadius: 12,
                             color: isBossFight
                                 ? Colors.redAccent
-                                : const Color(0xFFE6E6FA),
+                                : _warmTextColor.withOpacity(0.5),
                           )
                         ],
                       ),
                     ),
+                    const SizedBox(height: 8),
+                    Text(
+                      "Pregunta ${currentIndex + 1} / ${widget.totalQuestions}",
+                      style: TextStyle(
+                        fontFamily: "VT323",
+                        fontSize: isSmall ? 20 : 24,
+                        color: isBossFight
+                            ? Colors.cyanAccent
+                            : const Color(0xFF00695C),
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    
+                    SizedBox(height: size.height * 0.02),
 
-                    const SizedBox(height: 16),
-
-                    // HUD
+                    // --- 2. HUD AUMENTADO: Monedas, Reloj, Estrellas ---
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 20),
                       child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+                        crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
-                          _hudBox("⏱️ $timeRemaining", isSmall),
-                          _hudBox(
-                              "${currentIndex + 1}/${widget.totalQuestions}",
-                              isSmall),
-                          _hudBox("💰 $coins", isSmall),
+                          // MONEDAS (Más grande)
+                          Column(
+                            children: [
+                              Icon(Icons.attach_money,
+                                  color: coinColor, size: 36), // Aumentado de 30 -> 36
+                              Text(
+                                "$coins",
+                                style: TextStyle(
+                                  color: coinColor,
+                                  fontFamily: "PressStart2P",
+                                  fontSize: isSmall ? 14 : 16, // Aumentado de 12 -> 16
+                                ),
+                              ),
+                            ],
+                          ),
+
+                          // RELOJ CENTRAL (Más grande)
+                          Container(
+                            width: 82, // Aumentado de 70 -> 82
+                            height: 82,
+                            padding: isBossFight
+                                ? const EdgeInsets.all(10)
+                                : null,
+                            decoration: isBossFight
+                                ? BoxDecoration(
+                                    color: Colors.black.withOpacity(0.7),
+                                    shape: BoxShape.circle,
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.cyanAccent
+                                            .withOpacity(0.4),
+                                        blurRadius: 12,
+                                        spreadRadius: 2,
+                                      )
+                                    ],
+                                  )
+                                : null,
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                if(isBossFight)
+                                Icon(
+                                  Icons.schedule,
+                                  color: clockColor,
+                                  size: 28, // Aumentado de 24 -> 28
+                                ) else 
+                                Icon(
+                                  Icons.schedule,
+                                  color: clockColor,
+                                  size: 42, // Aumentado de 40 -> 42
+                                ),
+                                Text(
+                                  "$timeRemaining",
+                                  style: TextStyle(
+                                    fontFamily: "PressStart2P",
+                                    fontSize: isSmall ? 22 : 26, // Aumentado de 20 -> 26
+                                    color: clockColor,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+
+                          // ACIERTOS (Más grande)
+                          Column(
+                            children: [
+                              Icon(Icons.star,
+                                  color: isBossFight
+                                      ? Colors.greenAccent
+                                      : const Color.fromARGB(255, 0, 0, 0),
+                                  size: 36), // Aumentado de 30 -> 36
+                              Text(
+                                "$score",
+                                style: TextStyle(
+                                  color: isBossFight
+                                      ? Colors.greenAccent
+                                      : Colors.black,
+                                  fontFamily: "PressStart2P",
+                                  fontSize: isSmall ? 14 : 16, // Aumentado de 12 -> 16
+                                ),
+                              ),
+                            ],
+                          ),
                         ],
                       ),
                     ),
 
+                    // --- 3. ERRORES (Solo Jefe) ---
                     if (isBossFight)
                       Padding(
-                        padding: const EdgeInsets.only(top: 12),
-                        child: Text(
-                          "💀 Errores: $bossErrors / 3",
-                          style: const TextStyle(
-                              fontFamily: "PressStart2P",
-                              fontSize: 10,
-                              color: Colors.redAccent),
+                        padding: const EdgeInsets.only(top: 10),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF2A0A0A).withOpacity(0.9),
+                            borderRadius: BorderRadius.circular(15),
+                            border: Border.all(
+                              color: Colors.redAccent.withOpacity(0.6),
+                              width: 2,
+                            ),
+                          ),
+                          child: Text(
+                            "💀 Errores: $bossErrors / 3",
+                            style: const TextStyle(
+                                fontFamily: "PressStart2P",
+                                fontSize: 10,
+                                color: Colors.redAccent),
+                          ),
                         ),
                       ),
 
-                    const SizedBox(height: 30),
+                    SizedBox(height: size.height * 0.02), 
 
-                    // PREGUNTA
+                    // --- 4. COMODINES (Estilo Original) ---
+                    if (equipped.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: Wrap(
+                          spacing: 12,
+                          runSpacing: 10,
+                          alignment: WrapAlignment.center,
+                          children: equipped.map((powerup) {
+                            final usado = usedPowerups.contains(powerup.id);
+                            return PowerUpGameButton(
+                              powerUp: powerup,
+                              isUsed: usado,
+                              isSmall: isSmall,
+                              isDisabled: answerChecked,
+                              onPressed: () async {
+                                await PowerUpEffects.apply(
+                                  context: context,
+                                  powerUp: powerup,
+                                  pregunta: p,
+                                  setHint: _setHint,
+                                  hideSpecificOptions: _hideSpecificOptions,
+                                  addExtraSeconds: _addExtraSeconds,
+                                  refreshCoins: _refreshCoins,
+                                  usedPowerUps: usedPowerups,
+                                );
+                                if (mounted) setState(() {});
+                              },
+                            );
+                          }).toList(),
+                        ),
+                      ),
+
+                    SizedBox(height: size.height * 0.02),
+
+                    // --- 5. CAJA DE PREGUNTA ---
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 24),
                       child: Container(
                         padding: const EdgeInsets.all(20),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF1A0C3D).withOpacity(0.85),
+                          color: isBossFight
+                              ? _bossContainerColor
+                              : _warmContainerColor,
                           borderRadius: BorderRadius.circular(18),
                           border: Border.all(
-                              color: const Color(0xFFE6E6FA), width: 2),
+                              color: isBossFight
+                                  ? _bossBorderColor
+                                  : _warmBorderColor,
+                              width: 2),
                         ),
                         child: Text(
                           p.pregunta,
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             fontFamily: "VT323",
-                            fontSize: isSmall ? 24 : 28,
+                            fontSize: isSmall ? 23 : 24, 
                             color: Colors.white,
-                            height: 1.3,
+                            height: 1.2,
+                            fontWeight: FontWeight.w700
                           ),
                         ),
                       ),
                     ),
 
-                    const SizedBox(height: 30),
+                    SizedBox(height: size.height * 0.025),
 
-                    // OPCIONES
-                   Expanded(
+                    // --- 6. OPCIONES ---
+                    Expanded(
                       child: ListView.builder(
                         padding: const EdgeInsets.symmetric(horizontal: 24),
                         itemCount: opcionesVisibles.length,
                         itemBuilder: (context, i) {
                           final opcion = opcionesVisibles[i];
 
-                          // ✅ OCULTAR OPCIONES SI ESTÁN EN LA LISTA
                           if (opcionesOcultas.contains(opcion)) {
                             return const SizedBox.shrink();
                           }
 
                           return Padding(
-                            padding: const EdgeInsets.only(bottom: 14),
+                            padding: const EdgeInsets.only(bottom: 12),
                             child: GestureDetector(
                               onTap: answerChecked
                                   ? null
                                   : () => responder(p, opcion),
                               child: Container(
-                                padding: const EdgeInsets.all(18),
+                                padding: const EdgeInsets.all(16),
                                 decoration: BoxDecoration(
                                   color: getColor(p, opcion),
                                   borderRadius: BorderRadius.circular(14),
@@ -597,19 +789,23 @@ class _CulturaQuizScreenState extends State<CulturaQuizScreen>
                                         textAlign: TextAlign.center,
                                         style: TextStyle(
                                           fontFamily: "VT323",
-                                          fontSize: isSmall ? 22 : 26,
-                                          color: Colors.black87,
+                                          fontSize: isSmall ? 20 : 24,
+                                          color: isBossFight
+                                              ? Colors.black87
+                                              : Colors.black,
                                           fontWeight: FontWeight.bold,
                                         ),
                                       ),
                                     ),
-                                    // ✅ MOSTRAR ICONO DE BOMBILLA EN HINT
                                     if (opcion == hintedOption)
-                                      const Padding(
-                                        padding: EdgeInsets.only(left: 8),
+                                      Padding(
+                                        padding:
+                                            const EdgeInsets.only(left: 8),
                                         child: Icon(
                                           Icons.lightbulb,
-                                          color: Colors.black87,
+                                          color: isBossFight
+                                              ? Colors.black87
+                                              : Colors.black54,
                                           size: 18,
                                         ),
                                       ),
@@ -621,64 +817,6 @@ class _CulturaQuizScreenState extends State<CulturaQuizScreen>
                         },
                       ),
                     ),
-
-                    // ✅ COMODINES CON EFECTOS FUNCIONALES
-                    if (equipped.isNotEmpty)
-                      Padding(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 24, vertical: 12),
-                        child: Wrap(
-                          spacing: 8,
-                          runSpacing: 8,
-                          alignment: WrapAlignment.center,
-                          children: equipped.map((powerup) {
-                            final usado = usedPowerups.contains(powerup.id);
-                            return ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: usado
-                                    ? Colors.grey
-                                    : const Color(0xFF6A2E7F),
-                                foregroundColor: Colors.white,
-                                padding: EdgeInsets.symmetric(
-                                  vertical: isSmall ? 6 : 8,
-                                  horizontal: isSmall ? 8 : 12,
-                                ),
-                                elevation: 8,
-                              ),
-                              onPressed: (usado || answerChecked)
-                                  ? null
-                                  : () async {
-                                      await PowerUpEffects.apply(
-                                        context: context,
-                                        powerUp: powerup,
-                                        pregunta: preguntas[currentIndex],
-                                        setHint: (h) {
-                                          setState(() => hintedOption = h);
-                                        },
-                                        hideSpecificOptions: (ops) {
-                                          setState(() => opcionesOcultas.addAll(ops));
-                                        },
-                                        addExtraSeconds: (s) {
-                                          setState(() => timeRemaining += s);
-                                        },
-                                        refreshCoins: _loadCoins,
-                                        usedPowerUps: usedPowerups,
-                                      );
-                                      if (mounted) setState(() {});
-                                    },
-                              child: Text(
-                                powerup.name.isNotEmpty ? powerup.name : powerup.id ?? "?",
-                                style: TextStyle(
-                                  fontFamily: 'PressStart2P',
-                                  fontSize: isSmall ? 7 : 8,
-                                ),
-                              ),
-                            );
-                          }).toList(),
-                        ),
-                      ),
-
-                    const SizedBox(height: 20),
                   ],
                 );
               },
@@ -688,31 +826,95 @@ class _CulturaQuizScreenState extends State<CulturaQuizScreen>
       ),
     );
   }
+}
 
-  Widget _hudBox(String text, bool isSmall) {
-    return Container(
-      padding: EdgeInsets.symmetric(
-          horizontal: isSmall ? 10 : 14, vertical: isSmall ? 6 : 10),
-      decoration: BoxDecoration(
-        color: const Color(0xFF1A0C3D).withOpacity(0.8),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFE6E6FA), width: 2),
-      ),
-      child: Text(
-        text,
-        style: TextStyle(
-          fontFamily: "PressStart2P",
-          fontSize: isSmall ? 9 : 11,
-          color: const Color(0xFFE6E6FA),
+// --- WIDGETS AUXILIARES Y PAINTERS (SIN CAMBIOS) ---
+
+class PowerUpGameButton extends StatelessWidget {
+  final PowerUp powerUp;
+  final bool isUsed;
+  final bool isSmall;
+  final bool isDisabled;
+  final VoidCallback? onPressed;
+
+  const PowerUpGameButton({
+    super.key,
+    required this.powerUp,
+    required this.isUsed,
+    required this.isSmall,
+    required this.isDisabled,
+    required this.onPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final label = (powerUp.name.isNotEmpty) ? powerUp.name : powerUp.id;
+    final Color priceColor =
+        isUsed ? Colors.black38 : const Color(0xFFF57F17);
+    final Color textColor =
+        isUsed ? Colors.black54 : const Color(0xFF00695C);
+
+    return ElevatedButton(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: isUsed
+            ? Colors.grey.withOpacity(0.5)
+            : const Color(0xFFFFF8E1),
+        foregroundColor: textColor,
+        padding: EdgeInsets.symmetric(
+          vertical: isSmall ? 10 : 14,
+          horizontal: isSmall ? 15 : 16,
         ),
+        elevation: 6,
+        shadowColor: Colors.black.withOpacity(0.2),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+          side: BorderSide(
+            color: isUsed
+                ? Colors.transparent
+                : const Color(0xFF8D6E63),
+            width: 1,
+          ),
+        ),
+      ),
+      onPressed: (isUsed || isDisabled) ? null : onPressed,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            label,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontFamily: 'PressStart2P',
+              fontSize: isSmall ? 11 : 13,
+              color: textColor,
+              height: 1.2,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.stars_rounded,
+                size: 17,
+                color: priceColor,
+              ),
+              const SizedBox(width: 5),
+              Text(
+                "${powerUp.price}",
+                style: TextStyle(
+                  fontFamily: 'PressStart2P',
+                  fontSize: 16,
+                  color: priceColor,
+                ),
+              ),
+            ],
+          )
+        ],
       ),
     );
   }
 }
-
-// ================================================================
-// PAINTERS
-// ================================================================
 
 class _CulturaPainter extends CustomPainter {
   final double leafProgress;

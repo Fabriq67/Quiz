@@ -3,6 +3,7 @@
 //   3 Bloques: 5 / 5 / 10 preguntas
 //   Jefe (blockId == 3 + isBoss): cada error quita 2 monedas
 //   MEJORADO: Fondo espacial animado + agujero negro
+//   HUD: Reloj destacado y sin botón volver
 // ----------------------------------------------------------
 
 import 'dart:async';
@@ -89,23 +90,20 @@ class _CienciaQuizScreenState extends State<CienciaQuizScreen>
     super.dispose();
   }
 
-// ...existing code...
-
   Future<void> _loadEquipped() async {
     equipped = await ProgressManager.loadSelectedPowerUps();
-    // ✅ FILTRAR SOLO LOS QUE SON VÁLIDOS (no nulos o vacíos)
     equipped = equipped.where((p) => p.id.isNotEmpty).toList();
     if (!mounted) return;
     setState(() {});
   }
 
-// ...existing code...
   Future<void> _loadCoins() async {
     final p = await ProgressManager.loadProgress();
     if (!mounted) return;
     setState(() => coins = p.coins);
   }
 
+  // Helpers para PowerUpEffects
   void _setHint(String h) => setState(() => hintedOption = h);
   void _hideSpecificOptions(List<String> ops) =>
       setState(() => opcionesOcultas.addAll(ops));
@@ -134,7 +132,8 @@ class _CienciaQuizScreenState extends State<CienciaQuizScreen>
     await ProgressManager.failScienceBlock(widget.blockId);
 
     if (!mounted) return;
-    await _popup("¡TIEMPO AGOTADO!", "Perdiste todo el progreso.\nRegresa al menú.");
+    await _popup(
+        "¡TIEMPO AGOTADO!", "Perdiste todo el progreso.\nRegresa al menú.");
 
     Navigator.of(context).pushAndRemoveUntil(
       MaterialPageRoute(builder: (_) => const CienciaMenuScreen()),
@@ -224,6 +223,8 @@ class _CienciaQuizScreenState extends State<CienciaQuizScreen>
     // ✅ DESBLOQUEAR COMODÍN AL DERROTAR JEFE DE CIENCIA
     if (isBossFight) {
       await ProgressManager.defeatBoss("boss_ciencia");
+      // 👇 NOTIFICACIÓN PARA EL HUD
+      await ProgressManager.saveBool("has_new_powerup", true);
     }
 
     final monedas = calcularMonedas();
@@ -308,7 +309,7 @@ class _CienciaQuizScreenState extends State<CienciaQuizScreen>
       backgroundColor: const Color(0xFF050A1F),
       body: Stack(
         children: [
-          // FONDO ANIMADO CON ESTRELLAS Y COSMOS
+          // FONDO ANIMADO
           AnimatedBuilder(
             animation: _starsController,
             builder: (context, _) => CustomPaint(
@@ -363,7 +364,8 @@ class _CienciaQuizScreenState extends State<CienciaQuizScreen>
                         ? "⚫ JEFE: Guardián de la Memoria ⚫"
                         : "BLOQUE ${widget.blockId}",
                     style: TextStyle(
-                      color: isBossFight ? Colors.purpleAccent : Colors.cyanAccent,
+                      color:
+                          isBossFight ? Colors.purpleAccent : Colors.cyanAccent,
                       fontFamily: "PressStart2P",
                       fontSize: isSmall ? 9 : 11,
                       letterSpacing: 2,
@@ -371,7 +373,8 @@ class _CienciaQuizScreenState extends State<CienciaQuizScreen>
                           ? [
                               Shadow(
                                 blurRadius: 15,
-                                color: Colors.purpleAccent.withValues(alpha: 0.8),
+                                color:
+                                    Colors.purpleAccent.withValues(alpha: 0.8),
                               ),
                             ]
                           : null,
@@ -380,29 +383,30 @@ class _CienciaQuizScreenState extends State<CienciaQuizScreen>
                   ),
                 ),
 
-                // HUD
+                // ✅ HUD REDISEÑADO (Reloj grande)
                 Padding(
                   padding: EdgeInsets.symmetric(horizontal: isSmall ? 16 : 24),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    crossAxisAlignment: CrossAxisAlignment.center, // Alinear al centro
                     children: [
-                      // MONEDAS
+                      // MONEDAS (Más pequeño)
                       Column(
                         children: [
                           const Icon(Icons.attach_money,
-                              color: Colors.yellowAccent, size: 24),
+                              color: Colors.yellowAccent, size: 38),
                           Text(
                             "$coins",
                             style: TextStyle(
                               color: Colors.yellowAccent,
                               fontFamily: "PressStart2P",
-                              fontSize: isSmall ? 10 : 12,
+                              fontSize: isSmall ? 20 : 26,
                             ),
                           ),
                         ],
                       ),
 
-                      // TIMER
+                      // TIMER (GRANDE Y DESTACADO)
                       Column(
                         children: [
                           Icon(
@@ -410,13 +414,14 @@ class _CienciaQuizScreenState extends State<CienciaQuizScreen>
                             color: timeRemaining < 6
                                 ? Colors.redAccent
                                 : Colors.cyanAccent,
-                            size: 24,
+                            size: 100, // ✅ ICONO GRANDE
                           ),
+                          const SizedBox(height: 5),
                           Text(
                             "$timeRemaining",
                             style: TextStyle(
                               fontFamily: "PressStart2P",
-                              fontSize: isSmall ? 14 : 16,
+                              fontSize: isSmall ? 30 : 40, // ✅ TEXTO GRANDE
                               color: timeRemaining < 6
                                   ? Colors.redAccent
                                   : Colors.cyanAccent,
@@ -425,17 +430,17 @@ class _CienciaQuizScreenState extends State<CienciaQuizScreen>
                         ],
                       ),
 
-                      // PUNTUACIÓN
+                      // PUNTUACIÓN (Más pequeño)
                       Column(
                         children: [
                           const Icon(Icons.star,
-                              color: Colors.greenAccent, size: 24),
+                              color: Colors.greenAccent, size: 38),
                           Text(
                             "$score",
                             style: TextStyle(
                               color: Colors.greenAccent,
                               fontFamily: "PressStart2P",
-                              fontSize: isSmall ? 10 : 12,
+                              fontSize: isSmall ? 20 : 26,
                             ),
                           ),
                         ],
@@ -444,9 +449,9 @@ class _CienciaQuizScreenState extends State<CienciaQuizScreen>
                   ),
                 ),
 
-                const SizedBox(height: 24),
+                const SizedBox(height: 12),
 
-                // CONTENIDO PRINCIPAL
+                // FUTURE BUILDER
                 Expanded(
                   child: FutureBuilder<List<Pregunta>>(
                     future: futurePreguntas,
@@ -472,6 +477,105 @@ class _CienciaQuizScreenState extends State<CienciaQuizScreen>
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
+                                
+                                // COMODINES
+                                if (equipped.isNotEmpty)
+                                  Wrap(
+                                    spacing: 10,
+                                    runSpacing: 8,
+                                    alignment: WrapAlignment.center,
+                                    children: equipped.map((p) {
+                                      final usado = usedPowerups.contains(p.id);
+                                      final label = (p.name.isNotEmpty)
+                                          ? p.name
+                                          : p.id;
+
+                                      return ElevatedButton(
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: usado
+                                              ? Colors.grey.withOpacity(0.5)
+                                              : const Color(0xFF24133D),
+                                          foregroundColor: Colors.cyanAccent,
+                                          padding: EdgeInsets.symmetric(
+                                            vertical: isSmall ? 9 : 11,
+                                            horizontal: isSmall ? 10 : 12,
+                                          ),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(10),
+                                            side: BorderSide(
+                                              color: usado
+                                                  ? Colors.transparent
+                                                  : Colors.white24,
+                                              width: 1,
+                                            ),
+                                          ),
+                                        ),
+                                        onPressed: (usado || answerChecked)
+                                            ? null
+                                            : () async {
+                                                await PowerUpEffects.apply(
+                                                  context: context,
+                                                  powerUp: p,
+                                                  pregunta: pregunta,
+                                                  setHint: _setHint,
+                                                  hideSpecificOptions:
+                                                      _hideSpecificOptions,
+                                                  addExtraSeconds:
+                                                      _addExtraSeconds,
+                                                  refreshCoins: _refreshCoins,
+                                                  usedPowerUps: usedPowerups,
+                                                );
+                                                if (mounted) setState(() {});
+                                              },
+                                        // ✅ BOTÓN CON PRECIO
+                                        child: Column(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Text(
+                                              label,
+                                              textAlign: TextAlign.center,
+                                              style: TextStyle(
+                                                fontFamily: 'PressStart2P',
+                                                fontSize: isSmall ? 12 : 13,
+                                                color: usado
+                                                    ? Colors.white54
+                                                    : Colors.cyanAccent,
+                                              ),
+                                            ),
+                                            const SizedBox(height: 4),
+                                            Row(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                Icon(
+                                                  Icons.stars_rounded,
+                                                  size: 17,
+                                                  color: usado
+                                                      ? Colors.white38
+                                                      : const Color(0xFFFFD700),
+                                                ),
+                                                const SizedBox(width: 4),
+                                                Text(
+                                                  "${p.price}",
+                                                  style: TextStyle(
+                                                    fontFamily: 'PressStart2P',
+                                                    fontSize: 16,
+                                                    color: usado
+                                                        ? Colors.white38
+                                                        : const Color(
+                                                            0xFFFFD700),
+                                                  ),
+                                                ),
+                                              ],
+                                            )
+                                          ],
+                                        ),
+                                      );
+                                    }).toList(),
+                                  ),
+                                
+                                const SizedBox(height: 20),
+
                                 // PREGUNTA
                                 Container(
                                   padding: EdgeInsets.all(isSmall ? 16 : 20),
@@ -491,7 +595,7 @@ class _CienciaQuizScreenState extends State<CienciaQuizScreen>
                                     style: TextStyle(
                                       fontFamily: "VT323",
                                       color: Colors.white,
-                                      fontSize: isSmall ? 22 : 26,
+                                      fontSize: isSmall ? 26 :29,
                                       letterSpacing: 1,
                                       shadows: [
                                         Shadow(
@@ -526,24 +630,24 @@ class _CienciaQuizScreenState extends State<CienciaQuizScreen>
                                               );
                                             },
                                       child: AnimatedContainer(
-                                        duration: const Duration(
-                                            milliseconds: 300),
+                                        duration:
+                                            const Duration(milliseconds: 300),
+                                        curve: Curves.easeOut,
                                         padding: EdgeInsets.symmetric(
                                           vertical: isSmall ? 14 : 18,
-                                          horizontal: isSmall ? 14 : 20,
+                                          horizontal: isSmall ? 16 : 20,
                                         ),
                                         decoration: BoxDecoration(
                                           color: getColor(pregunta, opcion),
                                           borderRadius:
-                                              BorderRadius.circular(12),
+                                              BorderRadius.circular(18),
                                           boxShadow: answerChecked &&
                                                   opcion == selectedAnswer
                                               ? [
                                                   BoxShadow(
-                                                    color: getColor(pregunta,
-                                                            opcion)
-                                                        .withValues(
-                                                            alpha: 0.8),
+                                                    color: getColor(
+                                                            pregunta, opcion)
+                                                        .withValues(alpha: 0.6),
                                                     blurRadius: 20,
                                                     spreadRadius: 3,
                                                   ),
@@ -560,7 +664,7 @@ class _CienciaQuizScreenState extends State<CienciaQuizScreen>
                                                 textAlign: TextAlign.center,
                                                 style: TextStyle(
                                                   fontFamily: "PressStart2P",
-                                                  fontSize: isSmall ? 10 : 11,
+                                                  fontSize: isSmall ? 11 : 12,
                                                   color: Colors.black,
                                                   fontWeight: FontWeight.bold,
                                                 ),
@@ -585,62 +689,6 @@ class _CienciaQuizScreenState extends State<CienciaQuizScreen>
 
                                 const SizedBox(height: 20),
 
-                                // COMODINES
-                                if (equipped.isNotEmpty)
-                                  Wrap(
-                                    spacing: 10,
-                                    runSpacing: 8,
-                                    alignment: WrapAlignment.center,
-                                  // ...existing code...
-                                children: equipped.map((p) {
-                                  final usado = usedPowerups.contains(p.id);
-                                  final label = (p.name.isNotEmpty) ? p.name : p.id ?? "?";
-                                  return ElevatedButton(
-// ...existing code...
-                                        style: ElevatedButton.styleFrom(
-                                          backgroundColor: usado
-                                              ? Colors.grey
-                                              : const Color(0xFF24133D),
-                                          foregroundColor: Colors.cyanAccent,
-                                          padding: EdgeInsets.symmetric(
-                                            vertical: isSmall ? 8 : 10,
-                                            horizontal: isSmall ? 10 : 12,
-                                          ),
-                                          elevation: 8,
-                                          shadowColor:
-                                              Colors.cyanAccent.withValues(
-                                                  alpha: 0.5),
-                                        ),
-                                        onPressed: (usado || answerChecked)
-                                            ? null
-                                            : () async {
-                                                await PowerUpEffects.apply(
-                                                  context: context,
-                                                  powerUp: p,
-                                                  pregunta: pregunta,
-                                                  setHint: _setHint,
-                                                  hideSpecificOptions:
-                                                      _hideSpecificOptions,
-                                                  addExtraSeconds:
-                                                      _addExtraSeconds,
-                                                  refreshCoins: _refreshCoins,
-                                                  usedPowerUps: usedPowerups,
-                                                );
-                                                if (mounted) setState(() {});
-                                              },
-                                        child: Text(
-                                          label,
-                                          style: TextStyle(
-                                            fontFamily: 'PressStart2P',
-                                            fontSize: isSmall ? 8 : 9,
-                                          ),
-                                        ),
-                                      );
-                                    }).toList(),
-                                  ),
-
-                                const SizedBox(height: 20),
-
                                 // PROGRESO
                                 Text(
                                   "Pregunta ${currentIndex + 1} / ${widget.totalQuestions}",
@@ -661,6 +709,8 @@ class _CienciaQuizScreenState extends State<CienciaQuizScreen>
               ],
             ),
           ),
+          
+          // ✅ ELIMINADO BOTÓN DE REGRESO
         ],
       ),
     );
@@ -675,7 +725,8 @@ class _CosmicBackgroundPainter extends CustomPainter {
   final bool isBoss;
   final double blackHoleProgress;
 
-  _CosmicBackgroundPainter(this.starsProgress, this.isBoss, this.blackHoleProgress);
+  _CosmicBackgroundPainter(
+      this.starsProgress, this.isBoss, this.blackHoleProgress);
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -722,7 +773,8 @@ class _CosmicBackgroundPainter extends CustomPainter {
           size.height;
 
       final starSize = i % 20 == 0 ? 2.0 : (i % 10 == 0 ? 1.5 : 1.0);
-      final opacity = 0.3 + (math.sin(starsProgress * math.pi * 2 + i) * 0.7);
+      final opacity =
+          0.3 + (math.sin(starsProgress * math.pi * 2 + i) * 0.7);
 
       starPaint.color = Colors.white.withValues(alpha: opacity);
       canvas.drawCircle(Offset(x, y), starSize, starPaint);
@@ -734,7 +786,8 @@ class _CosmicBackgroundPainter extends CustomPainter {
         ..color = Colors.black.withValues(alpha: 0.8)
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 50);
 
-      final radius = 120 + (math.sin(blackHoleProgress * math.pi * 2) * 20);
+      final radius =
+          120 + (math.sin(blackHoleProgress * math.pi * 2) * 20);
       canvas.drawCircle(
         Offset(size.width * 0.85, size.height * 0.15),
         radius,
@@ -764,6 +817,7 @@ class _CosmicBackgroundPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
 }
+
 // ----------------------------------------------------------
 // RESULTADO FINAL
 // ----------------------------------------------------------

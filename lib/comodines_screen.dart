@@ -19,29 +19,55 @@ class _ComodinesScreenState extends State<ComodinesScreen> {
   void initState() {
     super.initState();
     _loadPowerUps();
+    _markAsSeen(); // ✅ Apaga la luz del HUD al entrar
+  }
+
+  // ✅ Nueva función para apagar la notificación
+  Future<void> _markAsSeen() async {
+    await ProgressManager.saveBool("has_new_powerup", false);
   }
 
   Future<void> _loadPowerUps() async {
     final jsonList = await PowerUpsService.loadPowerUps();
     final progress = await ProgressManager.loadProgress();
+    var selectedList = await ProgressManager.loadSelectedPowerUps();
+
+    // ✅ LÓGICA NUEVA: Auto-seleccionar "Pulso Temporal" si la lista está vacía
+    if (selectedList.isEmpty && jsonList.isNotEmpty) {
+      try {
+        final defaultPowerUp = jsonList.firstWhere(
+          (p) => p.name.toLowerCase().contains("pulso"), // Busca "Pulso Temporal"
+          orElse: () => jsonList.first, // O el primero que haya
+        );
+
+        // Solo lo seleccionamos si ya está desbloqueado (el primero suele estarlo)
+        if (progress.unlockedPowerUps.contains(defaultPowerUp.id)) {
+          selectedList = [defaultPowerUp];
+          // Guardamos internamente para que la próxima vez ya aparezca
+          await ProgressManager.saveSelectedPowerUps(selectedList);
+        }
+      } catch (e) {
+        debugPrint("Error auto-seleccionando comodín: $e");
+      }
+    }
 
     setState(() {
       // ✅ ORDENAR POR PRECIO (ya viene ordenado de PowerUpsService)
       allPowerUps = jsonList;
       unlockedIds = progress.unlockedPowerUps;
+      selected = selectedList;
     });
-
-    final selectedList = await ProgressManager.loadSelectedPowerUps();
-    setState(() => selected = selectedList);
   }
 
   void toggle(PowerUp p) {
     if (!unlockedIds.contains(p.id)) return;
 
     setState(() {
-      if (selected.contains(p)) {
-        selected.remove(p);
+      if (selected.any((s) => s.id == p.id)) {
+        selected.removeWhere((s) => s.id == p.id);
       } else {
+        // Si quieres que solo se seleccione uno a la vez, descomenta:
+        // selected.clear();
         selected = [p];
       }
     });
@@ -59,6 +85,7 @@ class _ComodinesScreenState extends State<ComodinesScreen> {
       appBar: AppBar(
         title: const Text(
           "Elige tu Comodín",
+          // ✅ TAMAÑO ORIGINAL CONSERVADO
           style: TextStyle(fontFamily: "PressStart2P", fontSize: 10),
         ),
         centerTitle: true,
@@ -68,7 +95,7 @@ class _ComodinesScreenState extends State<ComodinesScreen> {
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [
-          // ✅ MOSTRAR EN ORDEN (ya está ordenado desde PowerUpsService)
+          // ✅ MOSTRAR EN ORDEN
           for (final p in allPowerUps) _buildPowerUpCard(p),
 
           const SizedBox(height: 30),
@@ -82,6 +109,7 @@ class _ComodinesScreenState extends State<ComodinesScreen> {
             ),
             child: const Text(
               "GUARDAR SELECCIÓN",
+              // ✅ TAMAÑO ORIGINAL CONSERVADO
               style: TextStyle(fontFamily: "PressStart2P", fontSize: 12),
             ),
           ),
@@ -92,7 +120,8 @@ class _ComodinesScreenState extends State<ComodinesScreen> {
 
   Widget _buildPowerUpCard(PowerUp p) {
     final bool isUnlocked = unlockedIds.contains(p.id);
-    final bool isSelected = selected.contains(p);
+    // Comparación segura por ID
+    final bool isSelected = selected.any((s) => s.id == p.id);
 
     return Opacity(
       opacity: isUnlocked ? 1 : 0.3,
@@ -101,11 +130,11 @@ class _ComodinesScreenState extends State<ComodinesScreen> {
           if (isUnlocked) toggle(p);
         },
         child: Container(
-          margin: const EdgeInsets.only(bottom: 18),
-          padding: const EdgeInsets.all(16),
+          margin: const EdgeInsets.only(bottom: 18), // ✅ MARGEN ORIGINAL
+          padding: const EdgeInsets.all(16), // ✅ PADDING ORIGINAL
           decoration: BoxDecoration(
             color: const Color(0xFF24133D),
-            borderRadius: BorderRadius.circular(18),
+            borderRadius: BorderRadius.circular(18), // ✅ RADIO ORIGINAL
             border: Border.all(
               color: isSelected ? p.color : Colors.white24,
               width: isSelected ? 3 : 1,
@@ -117,19 +146,19 @@ class _ComodinesScreenState extends State<ComodinesScreen> {
                   ? (p.icon is IconData
                       ? Icon(
                           p.icon as IconData,
-                          size: 40,
+                          size: 40, // ✅ TAMAÑO ICONO ORIGINAL
                           color: p.color,
                         )
                       : Text(
                           p.icon.toString(),
                           style: TextStyle(
-                            fontSize: 40,
+                            fontSize: 40, // ✅ TAMAÑO TEXTO ICONO ORIGINAL
                             color: p.color,
                           ),
                         ))
                   : const Icon(
                       Icons.lock,
-                      size: 40,
+                      size: 40, // ✅ TAMAÑO LOCK ORIGINAL
                       color: Colors.white38,
                     ),
 
@@ -143,7 +172,7 @@ class _ComodinesScreenState extends State<ComodinesScreen> {
                       p.name,
                       style: TextStyle(
                         fontFamily: "PressStart2P",
-                        fontSize: 11,
+                        fontSize: 11, // ✅ FUENTE ORIGINAL
                         color: isUnlocked ? p.color : Colors.white38,
                       ),
                     ),
@@ -153,7 +182,7 @@ class _ComodinesScreenState extends State<ComodinesScreen> {
                       p.effect,
                       style: const TextStyle(
                         fontFamily: "VT323",
-                        fontSize: 20,
+                        fontSize: 20, // ✅ FUENTE ORIGINAL
                         color: Colors.white70,
                       ),
                     ),
