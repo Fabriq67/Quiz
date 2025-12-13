@@ -42,6 +42,7 @@ class _PurgatorioScreenState extends State<PurgatorioScreen>
     {
       "title": "LÓGICA",
       "desc": "Completa 'Percepción' para desbloquear.",
+      "descUnlocked": "Resuelve los acertijos mentales.",
       "icon": Icons.extension,
       "color": Color.fromARGB(255, 144, 25, 180),
       "available": false,
@@ -49,13 +50,15 @@ class _PurgatorioScreenState extends State<PurgatorioScreen>
     {
       "title": "CIENCIA",
       "desc": "Completa 'Lógica' para acceder.",
+      "descUnlocked": "Explora el conocimiento científico.",
       "icon": Icons.science,
       "color": Color.fromARGB(255, 31, 174, 23),
       "available": false,
     },
     {
       "title": "CULTURA",
-      "desc": "El juicio final te espera.",
+      "desc": "Completa 'Ciencia' para enfrentar.",
+      "descUnlocked": "El juicio final te espera.",
       "icon": Icons.public,
       "color": Color.fromARGB(255, 202, 34, 34),
       "available": false,
@@ -136,6 +139,17 @@ class _PurgatorioScreenState extends State<PurgatorioScreen>
     blocks[1]["available"] = unlocked.contains("logica");
     blocks[2]["available"] = unlocked.contains("ciencia");
     blocks[3]["available"] = unlocked.contains("cultura");
+
+    // ✅ ACTUALIZAR DESCRIPCIONES CUANDO ESTÁN DESBLOQUEADOS
+    if (blocks[1]["available"] == true) {
+      blocks[1]["desc"] = blocks[1]["descUnlocked"] as String;
+    }
+    if (blocks[2]["available"] == true) {
+      blocks[2]["desc"] = blocks[2]["descUnlocked"] as String;
+    }
+    if (blocks[3]["available"] == true) {
+      blocks[3]["desc"] = blocks[3]["descUnlocked"] as String;
+    }
 
     setState(() {});
   }

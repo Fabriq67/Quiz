@@ -112,7 +112,7 @@ class _PercepcionQuizScreenState extends State<PercepcionQuizScreen>
   void _hideSpecificOptions(List<String> ops) =>
       setState(() => opcionesOcultas.addAll(ops));
   void _addExtraSeconds(int s) =>
-      setState(() => timeRemaining = (timeRemaining + s).clamp(0, 60));
+      setState(() => timeRemaining = (timeRemaining + s).clamp(0, 120));
   Future<void> _refreshCoins() async => _loadCoins();
 
   void startTimer() {

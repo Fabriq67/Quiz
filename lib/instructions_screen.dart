@@ -405,7 +405,7 @@ class _InstructionsScreenState extends State<InstructionsScreen> {
               '• Clarividencia: te muestra una pista o te ayuda a descartar opciones.\n'
               '• 50/50: elimina respuestas incorrectas para aumentar tus probabilidades.\n'
               '• Tiempo extra: aumenta el tiempo disponible para responder.\n'
-              '• Ocultar opciones: reduce el ruido visual para concentrarte mejor.',
+              '• Ocultar una opcion: Quita una opcion incorrecta perfecta si buscas ahorrar y tener un poder equilibrado.',
               style: TextStyle(
                 fontFamily: 'VT323',
                 fontSize: 22,
