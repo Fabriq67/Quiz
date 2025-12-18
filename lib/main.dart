@@ -1,9 +1,28 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart'; 
+import 'firebase_options.dart'; 
 import 'dart:math' as math;
+
+// Tus pantallas
 import 'select_level_screen.dart';
 import 'instructions_screen.dart';
+import 'screens/settings_screen.dart'; 
 
-void main() {
+void main() async {
+  // 4. Asegurar inicialización de enlaces de Flutter
+  WidgetsFlutterBinding.ensureInitialized();
+  
+  // 5. Inicializar Firebase (MODO A PRUEBA DE ERRORES)
+  try {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+  } catch (e) {
+    // Si entra aquí, es porque ya estaba conectado. 
+    // No hacemos nada y dejamos que la app continúe feliz.
+    print("Firebase ya estaba inicializado, continuando...");
+  }
+
   runApp(const QuizMenteApp());
 }
 
@@ -55,7 +74,6 @@ class _HomeScreenState extends State<HomeScreen>
       vsync: this,
       duration: const Duration(seconds: 6),
     )..repeat();
-    // Aviso emergente eliminado
   }
 
   @override
@@ -114,6 +132,7 @@ class _HomeScreenState extends State<HomeScreen>
                     );
                   },
                 ),
+                
                 PixelButton(
                   text: 'INSTRUCCIONES',
                   onTap: () {
@@ -121,6 +140,19 @@ class _HomeScreenState extends State<HomeScreen>
                       context,
                       MaterialPageRoute(
                         builder: (context) => const InstructionsScreen(),
+                      ),
+                    );
+                  },
+                ),
+
+                // BOTÓN AJUSTES
+                PixelButton(
+                  text: 'AJUSTES',
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const SettingsScreen(),
                       ),
                     );
                   },

@@ -1,7 +1,7 @@
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
-import '../models/powerup_model.dart';
-
+import '../models/powerup_model.dart'; // Asegúrate de que esta ruta sea correcta en tu proyecto
+import '../services/cloud_service.dart'; // <--- AGREGA ESTO
 // =============================================================
 //   MODELO PRINCIPAL
 // =============================================================
@@ -14,11 +14,11 @@ class PlayerProgress {
   List<String> selectedPowerUps;
   List<String> defeatedBosses;
 
-  // 🔥 BLOQUES DE PERCEPCIÓN (NUMÉRICOS)
+  // 🔥 BLOQUES DE PERCEPCIÓN (NUMÉRICOS) Y OTROS
   List<String> unlockedBlocks;
   List<String> completedBlocks;
 
-  // 🔥 NIVELES DESBLOQUEADOS
+  // 🔥 NIVELES DESBLOQUEADOS (Categorías: percepcion, logica, etc)
   List<String> unlockedLevels;
 
   PlayerProgress({
@@ -76,42 +76,43 @@ class ProgressManager {
   // -------------------------------------------------------------
   // LOAD / SAVE
   // -------------------------------------------------------------
-static Future<PlayerProgress> loadProgress() async {
+  static Future<PlayerProgress> loadProgress() async {
     final prefs = await SharedPreferences.getInstance();
     final data = prefs.getString(_jsonKey);
 
     if (data == null) {
-      return PlayerProgress(
-        coins: 0,
-        currentLevel: 1,
-        currentBlock: 1,
-        unlockedPowerUps: ["pulso_temporal"],
-        selectedPowerUps: [],  // ✅ VACÍO, no ["pulso_temporal"]
-        defeatedBosses: [],
-        unlockedBlocks: ["1", "science_1", "culture_1"],
-        completedBlocks: [],
-      );
+      return _getInitialProgress();
     }
 
     try {
       return PlayerProgress.fromJson(jsonDecode(data));
     } catch (_) {
-      return PlayerProgress(
-        coins: 0,
-        currentLevel: 1,
-        currentBlock: 1,
-        unlockedPowerUps: ["pulso_temporal"],
-        selectedPowerUps: [],  // ✅ VACÍO, no ["pulso_temporal"]
-        defeatedBosses: [],
-        unlockedBlocks: ["1", "science_1", "culture_1"],
-        completedBlocks: [],
-      );
+      return _getInitialProgress();
     }
   }
 
+  // Helper privado para el estado inicial
+  static PlayerProgress _getInitialProgress() {
+    return PlayerProgress(
+      coins: 0,
+      currentLevel: 1,
+      currentBlock: 1,
+      unlockedPowerUps: ["pulso_temporal"],
+      selectedPowerUps: [], 
+      defeatedBosses: [],
+      unlockedBlocks: ["1", "science_1", "culture_1"],
+      completedBlocks: [],
+    );
+  }
+
+  // ✅ Método público para sobrescribir todo (Usado por la Nube)
   static Future<void> saveProgress(PlayerProgress p) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_jsonKey, jsonEncode(p.toJson()));
+
+    // 🔥🔥 LA MAGIA: CADA VEZ QUE GUARDAS EN LOCAL, SE SUBE A LA NUBE 🔥🔥
+    // No usamos 'await' aquí para que el juego no se trabe esperando internet
+    CloudService().autoSave(); 
   }
 
   // -------------------------------------------------------------
@@ -175,15 +176,11 @@ static Future<PlayerProgress> loadProgress() async {
     p.unlockedBlocks = ["1"];
     p.currentBlock = 1;
 
-    // ❌ NO RESETEAR COMODINES (se mantienen los desbloqueados)
-    // p.unlockedPowerUps = ["pulso_temporal"];
-    // p.selectedPowerUps = ["pulso_temporal"];
-
     await saveProgress(p);
   }
 
   // -------------------------------------------------------------
-  // LÓGICA — COMPLETADO
+  // LÓGICA
   // -------------------------------------------------------------
   static Future<void> completeLogicBlock(int id) async {
     final p = await loadProgress();
@@ -211,28 +208,19 @@ static Future<PlayerProgress> loadProgress() async {
     return false;
   }
 
-  // -------------------------------------------------------------
-  // LÓGICA — REINICIO (NO TOCA PERCEPCIÓN)
-  // -------------------------------------------------------------
   static Future<void> failLogicBlock(int id) async {
     final p = await loadProgress();
-
-    // ❗️ELIMINA SOLO PROGRESO DE LÓGICA
     p.completedBlocks.removeWhere((b) => b.startsWith("logica_"));
     p.unlockedBlocks.removeWhere((b) => b.startsWith("logica_"));
-
-    // asegurar logica_1 disponible
     if (!p.unlockedBlocks.contains("logica_1")) {
       p.unlockedBlocks.add("logica_1");
     }
-
     await saveProgress(p);
   }
 
-  // =============================================================
-  //   CULTURA GENERAL — BLOQUES
-  // =============================================================
-
+  // -------------------------------------------------------------
+  // CULTURA GENERAL
+  // -------------------------------------------------------------
   static Future<bool> isCultureBlockUnlocked(int id) async {
     final p = await loadProgress();
     return p.unlockedBlocks.contains("culture_$id");
@@ -251,45 +239,35 @@ static Future<PlayerProgress> loadProgress() async {
       p.completedBlocks.add(key);
     }
 
-    // ✅ Desbloquear el siguiente bloque de cultura
     if (id < 4) {
       final next = "culture_${id + 1}";
       if (!p.unlockedBlocks.contains(next)) {
         p.unlockedBlocks.add(next);
       }
     }
-
     await saveProgress(p);
   }
 
   static Future<void> unlockCultureBlock(int id) async {
     final p = await loadProgress();
     final key = "culture_$id";
-
     if (!p.unlockedBlocks.contains(key)) {
       p.unlockedBlocks.add(key);
     }
-
     await saveProgress(p);
   }
 
   static Future<void> failCultureBlock(int id) async {
     final p = await loadProgress();
-
-    // ❗ RESET SOLO CULTURA
     p.completedBlocks.removeWhere((e) => e.startsWith("culture_"));
     p.unlockedBlocks.removeWhere((e) => e.startsWith("culture_"));
-
-    // ✅ Bloque inicial desbloqueado
     p.unlockedBlocks.add("culture_1");
-
     await saveProgress(p);
   }
 
-  // =============================================================
-  //   CIENCIA Y TECNOLOGÍA — BLOQUES
-  // =============================================================
-
+  // -------------------------------------------------------------
+  // CIENCIA Y TECNOLOGÍA
+  // -------------------------------------------------------------
   static Future<bool> isScienceBlockUnlocked(int id) async {
     final p = await loadProgress();
     return p.unlockedBlocks.contains("science_$id");
@@ -308,43 +286,34 @@ static Future<PlayerProgress> loadProgress() async {
       p.completedBlocks.add(key);
     }
 
-    // ✅ Desbloquear el siguiente bloque
     final next = "science_${id + 1}";
     if (!p.unlockedBlocks.contains(next)) {
       p.unlockedBlocks.add(next);
     }
-
     await saveProgress(p);
   }
 
   static Future<void> unlockScienceBlock(int id) async {
     final p = await loadProgress();
     final key = "science_$id";
-
     if (!p.unlockedBlocks.contains(key)) {
       p.unlockedBlocks.add(key);
     }
-
     await saveProgress(p);
   }
 
   static Future<void> failScienceBlock(int id) async {
     final p = await loadProgress();
-
-    // Resetear solo ciencia
     p.completedBlocks.removeWhere((e) => e.startsWith("science_"));
     p.unlockedBlocks.removeWhere((e) => e.startsWith("science_"));
-
-    // Bloque inicial desbloqueado
     p.unlockedBlocks.add("science_1");
-
     await saveProgress(p);
   }
 
-  // =============================================================
-  // ✅ POWERUPS — DESBLOQUEO POR JEFE ESPECÍFICO
-  // =============================================================
- static Future<void> defeatBoss(String id) async {
+  // -------------------------------------------------------------
+  // POWERUPS & BOSS
+  // -------------------------------------------------------------
+  static Future<void> defeatBoss(String id) async {
     final p = await loadProgress();
 
     if (!p.defeatedBosses.contains(id)) {
@@ -358,7 +327,6 @@ static Future<PlayerProgress> loadProgress() async {
       case "boss_percepcion":
         powerUpToUnlock = "sombra_cognitiva";
         levelToUnlock = "logica";
-        // ✅ asegura que el bloque de Lógica quede desbloqueado
         if (!p.unlockedBlocks.contains("logica_1")) {
           p.unlockedBlocks.add("logica_1");
         }
@@ -381,8 +349,7 @@ static Future<PlayerProgress> loadProgress() async {
         break;
     }
 
-    if (powerUpToUnlock != null &&
-        !p.unlockedPowerUps.contains(powerUpToUnlock)) {
+    if (powerUpToUnlock != null && !p.unlockedPowerUps.contains(powerUpToUnlock)) {
       p.unlockedPowerUps.add(powerUpToUnlock);
     }
 
@@ -401,7 +368,7 @@ static Future<PlayerProgress> loadProgress() async {
     await saveProgress(p);
   }
 
-static Future<List<PowerUp>> loadSelectedPowerUps() async {
+  static Future<List<PowerUp>> loadSelectedPowerUps() async {
     final prefs = await SharedPreferences.getInstance();
     final raw = prefs.getString("selectedPowerUps_full");
 
@@ -411,33 +378,24 @@ static Future<List<PowerUp>> loadSelectedPowerUps() async {
             .map((e) => PowerUp.fromJson(Map<String, dynamic>.from(e)))
             .where((pu) => pu.id.isNotEmpty)
             .toList();
-
-        // ✅ SOLO devolver si hay seleccionados
-        if (list.isNotEmpty) {
-          return list;
-        }
+        if (list.isNotEmpty) return list;
       } catch (_) {}
     }
 
     final p = await loadProgress();
-
-    // ✅ RETORNAR LISTA VACÍA SI NO HAY selectedPowerUps GUARDADOS
-    if (p.selectedPowerUps.isEmpty) {
-      return [];
-    }
+    if (p.selectedPowerUps.isEmpty) return [];
 
     p.selectedPowerUps.removeWhere((e) => e.isEmpty);
-
     return p.selectedPowerUps
         .map((id) => PowerUp.fromJson({'id': id}))
         .toList();
   }
+
   static Future<void> saveSelectedPowerUps(List<PowerUp> list) async {
     final prefs = await SharedPreferences.getInstance();
     final p = await loadProgress();
 
-    final valid =
-        list.where((pu) => p.unlockedPowerUps.contains(pu.id)).toList();
+    final valid = list.where((pu) => p.unlockedPowerUps.contains(pu.id)).toList();
 
     prefs.setString(
       "selectedPowerUps_full",
@@ -445,21 +403,17 @@ static Future<List<PowerUp>> loadSelectedPowerUps() async {
     );
 
     p.selectedPowerUps = valid.map((e) => e.id).toList();
-
     await saveProgress(p);
   }
 
-  // =============================================================
-  //   BOSS — Estado derrotado
-  // =============================================================
   static Future<bool> isBossDefeated(String id) async {
     final p = await loadProgress();
     return p.defeatedBosses.contains(id);
   }
 
-  // =============================================================
-  //   FLAGS BOOLEANOS (para mensajes, tutoriales, etc.)
-  // =============================================================
+  // -------------------------------------------------------------
+  // OTROS
+  // -------------------------------------------------------------
   static Future<bool> getBool(String key) async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getBool(key) ?? false;
@@ -470,16 +424,11 @@ static Future<List<PowerUp>> loadSelectedPowerUps() async {
     await prefs.setBool(key, value);
   }
 
-  // -------------------------------------------------------------
-  // NIVELES
-  // -------------------------------------------------------------
   static Future<void> unlockLevel(String id) async {
     final p = await loadProgress();
-
     if (!p.unlockedLevels.contains(id)) {
       p.unlockedLevels.add(id);
     }
-
     await saveProgress(p);
   }
 
@@ -491,18 +440,8 @@ static Future<List<PowerUp>> loadSelectedPowerUps() async {
   static Future<void> resetAll({int coins = 0}) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.clear();
-
-    final p = PlayerProgress(
-      coins: coins,
-      currentLevel: 1,
-      currentBlock: 1,
-      unlockedPowerUps: ["pulso_temporal"],
-      selectedPowerUps: [],  // ✅ VACÍO, no ["pulso_temporal"]
-      defeatedBosses: [],
-      unlockedBlocks: ["1", "science_1", "culture_1"],
-      completedBlocks: [],
-    );
-    
+    final p = _getInitialProgress();
+    p.coins = coins;
     await saveProgress(p);
   }
 }

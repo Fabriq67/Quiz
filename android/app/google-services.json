@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "599079700142",
+    "firebase_url": "https://quizmente-5a506-default-rtdb.firebaseio.com",
+    "project_id": "quizmente-5a506",
+    "storage_bucket": "quizmente-5a506.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:599079700142:android:2d19ede0ddc0324575cf3f",
+        "android_client_info": {
+          "package_name": "com.example.quizmente"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "599079700142-3eaodeosuq86dg4f8p1dgv03p20u68l3.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCXPNh5MHEgJPRjZQAJ4mEZGr6aKofGFRo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "599079700142-3eaodeosuq86dg4f8p1dgv03p20u68l3.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

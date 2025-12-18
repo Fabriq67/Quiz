@@ -13,6 +13,10 @@ dependencies:
   cupertino_icons: ^1.0.8
   shared_preferences: ^2.3.2
   flutter_native_splash: ^2.4.7
+  firebase_core: ^2.24.2
+  cloud_firestore: ^4.14.0
+  firebase_auth: ^4.16.0
+  google_sign_in: ^6.2.1 # Opcional pero recomendado para login fácil
 
 flutter_native_splash:
   color: "#140B24"
