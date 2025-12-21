@@ -21,12 +21,14 @@ class CulturaQuizScreen extends StatefulWidget {
   final int blockId;
   final int totalQuestions;
   final bool isBoss;
+  final bool freeMode; // ← MODO LIBRE
 
   const CulturaQuizScreen({
     super.key,
     required this.blockId,
     required this.totalQuestions,
     required this.isBoss,
+    this.freeMode = false, // Default: false
   });
 
   @override
@@ -153,10 +155,12 @@ class _CulturaQuizScreenState extends State<CulturaQuizScreen>
     _isProcessing = true;
     timer?.cancel();
 
-    await ProgressManager.failCultureBlock(widget.blockId);
+    if (!widget.freeMode) {
+      await ProgressManager.failCultureBlock(widget.blockId);
+    }
 
     if (!mounted) return;
-    await _showResultScreen(false, 0);
+    await _showResultScreen(false, 0, widget.freeMode);
 
     if (!mounted) return;
     Navigator.of(context).pushAndRemoveUntil(
@@ -178,18 +182,22 @@ class _CulturaQuizScreenState extends State<CulturaQuizScreen>
       score++;
     } else if (isBossFight) {
       bossErrors++;
-      await ProgressManager.addCoins(-10);
-      
+      if (!widget.freeMode) {
+        await ProgressManager.addCoins(-10);
+      }
+
       if (!mounted) return;
       await _loadCoins();
 
       if (bossErrors >= 3) {
         _isProcessing = true;
         timer?.cancel();
-        await ProgressManager.failCultureBlock(widget.blockId);
+        if (!widget.freeMode) {
+          await ProgressManager.failCultureBlock(widget.blockId);
+        }
 
         if (!mounted) return;
-        await _showResultScreen(false, 0);
+        await _showResultScreen(false, 0, widget.freeMode);
 
         if (!mounted) return;
         Navigator.of(context).pushAndRemoveUntil(
@@ -252,37 +260,62 @@ class _CulturaQuizScreenState extends State<CulturaQuizScreen>
     final monedas = paso ? calcularMonedas() : 0;
 
     if (paso) {
+      // ✅ GANAR MONEDAS EN AMBOS MODOS
       if (monedas > 0) await ProgressManager.addCoins(monedas);
 
-      if (isBossFight) {
-        await ProgressManager.defeatBoss("boss_cultura_4");
-        await ProgressManager.saveBool("has_new_powerup", true);
-      }
+      // ✅ DESBLOQUEAR COMODÍN Y PROGRESO SOLO EN MODO NORMAL
+      if (!widget.freeMode) {
+        if (isBossFight) {
+          await ProgressManager.defeatBoss("boss_cultura_4");
+          await ProgressManager.saveBool("has_new_powerup", true);
+        }
 
-      await ProgressManager.completeCultureBlock(widget.blockId);
+        await ProgressManager.completeCultureBlock(widget.blockId);
 
-      if (widget.blockId < 4) {
-        await ProgressManager.unlockCultureBlock(widget.blockId + 1);
-      }
+        if (widget.blockId < 4) {
+          await ProgressManager.unlockCultureBlock(widget.blockId + 1);
+        }
 
-      if (isBossFight && mounted) {
-        await _showEscapeDialog();
+        if (isBossFight && mounted) {
+          await _showEscapeDialog();
+        }
+      } else {
+        // EN MODO LIBRE: mostrar mensaje con monedas ganadas
+        if (monedas > 0 && mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              backgroundColor: const Color(0xFFB388FF),
+              duration: const Duration(seconds: 2),
+              content: Text(
+                "Has ganado $monedas monedas.",
+                style: const TextStyle(color: Colors.black, fontFamily: "VT323"),
+              ),
+            ),
+          );
+        }
       }
     } else {
-      await ProgressManager.failCultureBlock(widget.blockId);
+      // En modo libre, no fallar = no guardar
+      if (!widget.freeMode) {
+        await ProgressManager.failCultureBlock(widget.blockId);
+      }
     }
 
     if (!mounted) return;
-    await _showResultScreen(paso, monedas);
+    await _showResultScreen(paso, monedas, widget.freeMode);
 
     if (!mounted) return;
-    Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(builder: (_) => const CulturaMenuScreen()),
-      (route) => false,
-    );
+    if (widget.freeMode) {
+      Navigator.pop(context);
+    } else {
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => const CulturaMenuScreen()),
+        (route) => false,
+      );
+    }
   }
 
-  Future<void> _showResultScreen(bool passed, int earnedCoins) async {
+  Future<void> _showResultScreen(bool passed, int earnedCoins, bool freeMode) async {
     return showDialog(
       context: context,
       barrierDismissible: false,
@@ -390,16 +423,16 @@ class _CulturaQuizScreenState extends State<CulturaQuizScreen>
             shape:
                 RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
             title: const Text(
-              "¡Felicidades!",
+              "¡FELICIDADES!",
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontFamily: "PressStart2P",
-                fontSize: 14,
+                fontSize: 18,
                 color: Colors.greenAccent,
               ),
             ),
             content: const Text(
-              "Saliste del purgatorio.\n\nNuevas aventuras te esperan próximamente.\n\nEres libre. ¡Bien hecho, guerrero mental!",
+              "¡Felicidades!\n\n¡Saliste del purgatorio!\n\n🎮 MODO ARCADE DESBLOQUEADO 🎮\n\nVuelve al menú principal para jugar todos los niveles de forma libre, sin penalizaciones ni limitaciones de tiempo.\n\n¡Eres libre, guerrero mental!",
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontFamily: "VT323",

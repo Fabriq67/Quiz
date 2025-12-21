@@ -22,12 +22,14 @@ class CienciaQuizScreen extends StatefulWidget {
   final int blockId;
   final int totalQuestions;
   final bool isBoss;
+  final bool freeMode; // ← MODO LIBRE
 
   const CienciaQuizScreen({
     super.key,
     required this.blockId,
     required this.totalQuestions,
     required this.isBoss,
+    this.freeMode = false, // Default: false
   });
 
   @override
@@ -129,7 +131,9 @@ class _CienciaQuizScreenState extends State<CienciaQuizScreen>
     _isProcessing = true;
 
     timer?.cancel();
-    await ProgressManager.failScienceBlock(widget.blockId);
+    if (!widget.freeMode) {
+      await ProgressManager.failScienceBlock(widget.blockId);
+    }
 
     if (!mounted) return;
     await _popup(
@@ -153,7 +157,9 @@ class _CienciaQuizScreenState extends State<CienciaQuizScreen>
     if (correct) {
       score++;
     } else if (isBossFight) {
-      await ProgressManager.addCoins(-2);
+      if (!widget.freeMode) {
+        await ProgressManager.addCoins(-2);
+      }
       await _loadCoins();
     }
 
@@ -208,30 +214,46 @@ class _CienciaQuizScreenState extends State<CienciaQuizScreen>
     final paso = score >= minimo;
 
     if (!paso) {
-      await ProgressManager.failScienceBlock(widget.blockId);
+      // En modo libre, no fallar = no guardar
+      if (!widget.freeMode) {
+        await ProgressManager.failScienceBlock(widget.blockId);
+      }
 
       if (!mounted) return;
-      await _popup("BLOQUE FALLIDO", "Perdiste todo el progreso.");
-
-      Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (_) => const CienciaMenuScreen()),
-        (route) => false,
+      await _popup(
+        "BLOQUE FALLIDO",
+        widget.freeMode
+            ? "Modo arcade: Sin penalizaciones.\nIntenta de nuevo."
+            : "Perdiste todo el progreso.",
       );
+
+      if (widget.freeMode) {
+        Navigator.pop(context);
+      } else {
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (_) => const CienciaMenuScreen()),
+          (route) => false,
+        );
+      }
       return;
     }
 
-    // ✅ DESBLOQUEAR COMODÍN AL DERROTAR JEFE DE CIENCIA
-    if (isBossFight) {
-      await ProgressManager.defeatBoss("boss_ciencia");
-      // 👇 NOTIFICACIÓN PARA EL HUD
-      await ProgressManager.saveBool("has_new_powerup", true);
-    }
-
+    // ✅ GANAR MONEDAS EN AMBOS MODOS
     final monedas = calcularMonedas();
     if (monedas > 0) await ProgressManager.addCoins(monedas);
 
-    await ProgressManager.completeScienceBlock(widget.blockId);
+    // ✅ DESBLOQUEAR COMODÍN Y PROGRESO SOLO EN MODO NORMAL
+    if (!widget.freeMode) {
+      // DESBLOQUEAR COMODÍN AL DERROTAR JEFE DE CIENCIA
+      if (isBossFight) {
+        await ProgressManager.defeatBoss("boss_ciencia");
+        await ProgressManager.saveBool("has_new_powerup", true);
+      }
 
+      await ProgressManager.completeScienceBlock(widget.blockId);
+    }
+
+    // Mostrar popup de monedas ganadas en ambos modos
     if (monedas > 0 && mounted) {
       await _popup("¡Monedas Ganadas!", "Has ganado $monedas monedas.");
     }
@@ -245,6 +267,7 @@ class _CienciaQuizScreenState extends State<CienciaQuizScreen>
           score: score,
           total: widget.totalQuestions,
           paso: paso,
+          freeMode: widget.freeMode, // ← Pasar modo libre
         ),
       ),
     );
@@ -826,6 +849,7 @@ class CienciaResultadoScreen extends StatelessWidget {
   final int score;
   final int total;
   final bool paso;
+  final bool freeMode; // ← MODO LIBRE
 
   const CienciaResultadoScreen({
     super.key,
@@ -833,6 +857,7 @@ class CienciaResultadoScreen extends StatelessWidget {
     required this.score,
     required this.total,
     required this.paso,
+    this.freeMode = false,
   });
 
   @override

@@ -20,12 +20,14 @@ class LogicaQuizScreen extends StatefulWidget {
   final int blockId;
   final int totalQuestions;
   final bool isBoss;
+  final bool freeMode; // ← MODO LIBRE
 
   const LogicaQuizScreen({
     super.key,
     required this.blockId,
     required this.totalQuestions,
     required this.isBoss,
+    this.freeMode = false, // Default: false
   });
 
   @override
@@ -133,7 +135,9 @@ class _LogicaQuizScreenState extends State<LogicaQuizScreen>
     _isProcessing = true;
 
     timer?.cancel();
-    await ProgressManager.failLogicBlock(widget.blockId);
+    if (!widget.freeMode) {
+      await ProgressManager.failLogicBlock(widget.blockId);
+    }
 
     if (!mounted) return;
     await showDialog(
@@ -251,7 +255,10 @@ class _LogicaQuizScreenState extends State<LogicaQuizScreen>
     final paso = score >= minimo;
 
     if (!paso) {
-      await ProgressManager.failLogicBlock(widget.blockId);
+      // En modo libre, no fallar = no guardar
+      if (!widget.freeMode) {
+        await ProgressManager.failLogicBlock(widget.blockId);
+      }
 
       if (!mounted) return;
       await showDialog(
@@ -268,10 +275,12 @@ class _LogicaQuizScreenState extends State<LogicaQuizScreen>
               color: Colors.redAccent,
             ),
           ),
-          content: const Text(
-            "\nPerdiste el progreso completo.\nRegresa al menú.",
+          content: Text(
+            widget.freeMode
+                ? "\nModo arcade: Sin penalizaciones.\nIntenta de nuevo."
+                : "\nPerdiste el progreso completo.\nRegresa al menú.",
             textAlign: TextAlign.center,
-            style: TextStyle(
+            style: const TextStyle(
               fontFamily: "VT323",
               fontSize: 26,
               color: Colors.white,
@@ -280,13 +289,18 @@ class _LogicaQuizScreenState extends State<LogicaQuizScreen>
           actions: [
             TextButton(
               onPressed: () {
-                Navigator.of(context).pushAndRemoveUntil(
-                  MaterialPageRoute(builder: (_) => const LogicaMenuScreen()),
-                  (route) => false,
-                );
+                if (widget.freeMode) {
+                  Navigator.pop(context);
+                  Navigator.pop(context);
+                } else {
+                  Navigator.of(context).pushAndRemoveUntil(
+                    MaterialPageRoute(builder: (_) => const LogicaMenuScreen()),
+                    (route) => false,
+                  );
+                }
               },
               child: const Text(
-                "VOLVER AL MENÚ",
+                "VOLVER",
                 style: TextStyle(
                   color: Colors.cyanAccent,
                   fontFamily: "PressStart2P",
@@ -299,55 +313,73 @@ class _LogicaQuizScreenState extends State<LogicaQuizScreen>
       return;
     }
 
-    // ✅ DESBLOQUEAR COMODÍN AL DERROTAR JEFE DE LÓGICA
-    if (isBossFight) {
-      await ProgressManager.defeatBoss("boss_logica");
-      // 👇👇👇 AÑADIDO: Activa la notificación para el HUD 👇👇👇
-      await ProgressManager.saveBool("has_new_powerup", true);
-    }
-
+    // ✅ GANAR MONEDAS EN AMBOS MODOS
     final monedasGanadas = calcularMonedas();
     if (monedasGanadas > 0) {
       await ProgressManager.addCoins(monedasGanadas);
     }
-    await ProgressManager.completeLogicBlock(widget.blockId);
 
-    if (monedasGanadas > 0 && mounted) {
-      await showDialog(
-        context: context,
-        builder: (_) => AlertDialog(
-          backgroundColor: const Color(0xFF0F1420),
-          title: const Text(
-            "¡Monedas Ganadas!",
-            style: TextStyle(
-              color: Color(0xFF5A9FD4),
-              fontFamily: "PressStart2P",
-              fontSize: 12,
-            ),
-          ),
-          content: Text(
-            "Has ganado $monedasGanadas monedas.",
-            style: const TextStyle(
-              color: Colors.white,
-              fontFamily: "VT323",
-              fontSize: 22,
-            ),
-            textAlign: TextAlign.center,
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text(
-                "OK",
-                style: TextStyle(
-                  color: Color(0xFF5A9FD4),
-                  fontFamily: "PressStart2P",
-                ),
+    // ✅ DESBLOQUEAR COMODÍN Y PROGRESO SOLO EN MODO NORMAL
+    if (!widget.freeMode) {
+      // DESBLOQUEAR COMODÍN AL DERROTAR JEFE DE LÓGICA
+      if (isBossFight) {
+        await ProgressManager.defeatBoss("boss_logica");
+        await ProgressManager.saveBool("has_new_powerup", true);
+      }
+
+      await ProgressManager.completeLogicBlock(widget.blockId);
+
+      if (monedasGanadas > 0 && mounted) {
+        await showDialog(
+          context: context,
+          builder: (_) => AlertDialog(
+            backgroundColor: const Color(0xFF0F1420),
+            title: const Text(
+              "¡Monedas Ganadas!",
+              style: TextStyle(
+                color: Color(0xFF5A9FD4),
+                fontFamily: "PressStart2P",
+                fontSize: 12,
               ),
-            )
-          ],
-        ),
-      );
+            ),
+            content: Text(
+              "Has ganado $monedasGanadas monedas.",
+              style: const TextStyle(
+                color: Colors.white,
+                fontFamily: "VT323",
+                fontSize: 22,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text(
+                  "OK",
+                  style: TextStyle(
+                    color: Color(0xFF5A9FD4),
+                    fontFamily: "PressStart2P",
+                  ),
+                ),
+              )
+            ],
+          ),
+        );
+      }
+    } else {
+      // EN MODO LIBRE: mostrar mensaje con monedas ganadas
+      if (monedasGanadas > 0 && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            backgroundColor: const Color(0xFF5A9FD4),
+            duration: const Duration(seconds: 2),
+            content: Text(
+              "Has ganado $monedasGanadas monedas.",
+              style: const TextStyle(color: Colors.black, fontFamily: "VT323"),
+            ),
+          ),
+        );
+      }
     }
 
     if (!mounted) return;
@@ -359,6 +391,7 @@ class _LogicaQuizScreenState extends State<LogicaQuizScreen>
           score: score,
           total: widget.totalQuestions,
           paso: paso,
+          freeMode: widget.freeMode, // ← Pasar modo libre
         ),
       ),
     );
@@ -816,6 +849,7 @@ class LogicaResultadoScreen extends StatelessWidget {
   final int score;
   final int total;
   final bool paso;
+  final bool freeMode; // ← MODO LIBRE
 
   const LogicaResultadoScreen({
     super.key,
@@ -823,6 +857,7 @@ class LogicaResultadoScreen extends StatelessWidget {
     required this.score,
     required this.total,
     required this.paso,
+    this.freeMode = false,
   });
 
   @override

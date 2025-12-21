@@ -21,6 +21,9 @@ class PlayerProgress {
   // 🔥 NIVELES DESBLOQUEADOS (Categorías: percepcion, logica, etc)
   List<String> unlockedLevels;
 
+  // 🎮 MODO LIBRE: SE ACTIVA AL COMPLETAR TODAS LAS CATEGORÍAS
+  bool freeModePermanent; // Si es true, modo libre siempre disponible
+
   PlayerProgress({
     required this.coins,
     required this.currentLevel,
@@ -31,8 +34,10 @@ class PlayerProgress {
     required this.unlockedBlocks,
     List<String>? completedBlocks,
     List<String>? unlockedLevels,
+    bool? freeModePermanent,
   })  : completedBlocks = completedBlocks ?? [],
-        unlockedLevels = unlockedLevels ?? ["percepcion"];
+        unlockedLevels = unlockedLevels ?? ["percepcion"],
+        freeModePermanent = freeModePermanent ?? false;
 
   Map<String, dynamic> toJson() => {
         'coins': coins,
@@ -44,6 +49,7 @@ class PlayerProgress {
         'unlockedBlocks': unlockedBlocks,
         'completedBlocks': completedBlocks,
         'unlockedLevels': unlockedLevels,
+        'freeModePermanent': freeModePermanent,
       };
 
   factory PlayerProgress.fromJson(Map<String, dynamic> json) => PlayerProgress(
@@ -56,6 +62,7 @@ class PlayerProgress {
         unlockedBlocks: List<String>.from(json['unlockedBlocks'] ?? ["1"]),
         completedBlocks: List<String>.from(json['completedBlocks'] ?? []),
         unlockedLevels: List<String>.from(json['unlockedLevels'] ?? ["percepcion"]),
+        freeModePermanent: json['freeModePermanent'] ?? false,
       );
 }
 
@@ -435,6 +442,59 @@ class ProgressManager {
   static Future<bool> isLevelUnlocked(String id) async {
     final p = await loadProgress();
     return p.unlockedLevels.contains(id);
+  }
+
+  // ========================================================
+  // MODO LIBRE (ARCADE MODE)
+  // ========================================================
+  
+  /// Detecta si el jugador completó el juego completo:
+  /// - Percepción: 2 bloques completados
+  /// - Lógica: 3 bloques completados
+  /// - Cultura: 4 bloques completados
+  /// - Ciencia: 3 bloques completados
+  static Future<bool> isGameCompleted() async {
+    final percepcion1 = await isBlockCompleted(1);
+    final percepcion2 = await isBlockCompleted(2);
+    
+    final logica1 = await isLogicBlockCompleted(1);
+    final logica2 = await isLogicBlockCompleted(2);
+    final logica3 = await isLogicBlockCompleted(3);
+    
+    final cultura1 = await isCultureBlockCompleted(1);
+    final cultura2 = await isCultureBlockCompleted(2);
+    final cultura3 = await isCultureBlockCompleted(3);
+    final cultura4 = await isCultureBlockCompleted(4);
+    
+    final ciencia1 = await isScienceBlockCompleted(1);
+    final ciencia2 = await isScienceBlockCompleted(2);
+    final ciencia3 = await isScienceBlockCompleted(3);
+
+    return percepcion1 &&
+        percepcion2 &&
+        logica1 &&
+        logica2 &&
+        logica3 &&
+        cultura1 &&
+        cultura2 &&
+        cultura3 &&
+        cultura4 &&
+        ciencia1 &&
+        ciencia2 &&
+        ciencia3;
+  }
+
+  /// Activa permanentemente el modo libre
+  static Future<void> unlockFreeMode() async {
+    final p = await loadProgress();
+    p.freeModePermanent = true;
+    await saveProgress(p);
+  }
+
+  /// Verifica si el modo libre está activo
+  static Future<bool> isFreeModeUnlocked() async {
+    final p = await loadProgress();
+    return p.freeModePermanent;
   }
 
   static Future<void> resetAll({int coins = 0}) async {

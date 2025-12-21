@@ -4,8 +4,8 @@ import 'purgatorio_screen.dart';
 import 'hud_widget.dart';
 import 'comodines_screen.dart';
 import 'jefes_screen.dart';
+import 'main_menu_screen.dart';
 import '../data/progress_manager.dart';
-import 'main.dart';
 
 class SelectLevelScreen extends StatefulWidget {
   const SelectLevelScreen({super.key});
@@ -199,7 +199,7 @@ class _SelectLevelScreenState extends State<SelectLevelScreen>
               onTap: () {
                 Navigator.pushAndRemoveUntil(
                   context,
-                  MaterialPageRoute(builder: (_) => const HomeScreen()),
+                  MaterialPageRoute(builder: (_) => const MainMenuScreen()),
                   (route) => false,
                 );
               },
